@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>易·占</title>
+<title>玄策</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -66,7 +66,15 @@ body {
 .bnav {
   display: flex;
   height: var(--nav-h);
-  background: #1c1408;
+  background-color: rgba(242,236,224,0.78);
+  background-image:
+    linear-gradient(rgba(160,130,80,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160,130,80,0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  border-top: 1px solid rgba(168,120,0,0.16);
+  box-shadow: 0 -12px 28px rgba(28,20,8,0.06);
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
   flex-shrink: 0;
 }
 .bnav-btn {
@@ -74,11 +82,14 @@ body {
   align-items: center; justify-content: center; gap: 4px;
   background: none; border: none; cursor: pointer;
   font-family: 'Noto Serif SC', serif;
-  font-size: 10px; color: rgba(255,255,255,0.45);
+  font-size: 10px; color: rgba(74,60,40,0.58);
   padding-bottom: 6px;
-  transition: color 0.2s;
+  transition: color 0.2s, text-shadow 0.2s;
 }
-.bnav-btn.on { color: var(--gold-light); }
+.bnav-btn.on {
+  color: var(--gold);
+  text-shadow: 0 1px 10px rgba(168,120,0,0.24);
+}
 .bnav-icon { font-size: 18px; line-height: 1; }
 
 /* ── GRID-LINE PAPER BG ── */
@@ -549,6 +560,7 @@ body {
 }
 .toast.show { opacity: 1; }
 .debug-bar {
+  display: none;
   position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
   width: min(345px, calc(100vw - 24px));
   background: rgba(28,20,8,0.92); color: var(--paper);
@@ -575,7 +587,7 @@ body {
     <div class="scroll-body">
       <div class="home-hd">
         <div class="home-hd-top">
-          <div class="home-hd-appname">易 · 占</div>
+          <div class="home-hd-appname">玄策</div>
           <div class="home-hd-date" id="hd-date">5月26日（Demo）</div>
         </div>
         <div style="font-size:11px;color:var(--ink-light);margin-top:3px;" id="hd-lunar">今日黄历</div>
@@ -643,10 +655,12 @@ body {
         </div>
       </div>
 
+      <!-- 调试区：演示时隐藏
       <div class="debug-actions">
         <button class="debug-action-btn" onclick="quickSelfCast()">自检起卦</button>
         <button class="debug-action-btn" onclick="clearTodayGua()">清除今日卦</button>
       </div>
+      -->
 
       <!-- 八字入口 -->
       <button class="bazi-entry" onclick="goScreen('bazi')">
@@ -654,6 +668,14 @@ body {
         <div class="bazi-entry-info">
           <div class="bazi-entry-name">八字命盘</div>
           <div class="bazi-entry-desc">输入生辰，推算四柱与五行</div>
+        </div>
+        <span class="bazi-entry-arrow">›</span>
+      </button>
+      <button class="bazi-entry" onclick="openGuaji()" style="margin-top:0;">
+        <div class="bazi-entry-icon"><span style="font-family:'Ma Shan Zheng',cursive;font-size:18px;color:var(--gold-light);">记</span></div>
+        <div class="bazi-entry-info">
+          <div class="bazi-entry-name">卦记历史</div>
+          <div class="bazi-entry-desc">查看历次存储的卦象记录</div>
         </div>
         <span class="bazi-entry-arrow">›</span>
       </button>
@@ -785,7 +807,7 @@ body {
           感情：<span class="kw">吉</span>，坦诚则和，此时宜增进感情。
         </div>
       </div>
-      <button class="gr-save" onclick="showToast('已存入卦记')">存 入 卦 记</button>
+      <button class="gr-save" onclick="saveToGuaji()">存 入 卦 记</button>
     </div>
   </div>
 
@@ -965,10 +987,23 @@ body {
     </div>
   </div>
 
+  <!-- ═══ 卦记 ═══ -->
+  <div class="screen grid-bg" id="guaji">
+    <div class="status"><span>9:41</span><span style="font-family:monospace;font-size:10px">■■■ 5G ●</span></div>
+    <div class="scroll-body">
+      <button class="gd-detail-back" onclick="goScreen('today')">← 返回</button>
+      <div class="guadian-hd">
+        <div class="guadian-title">卦 记</div>
+        <div class="guadian-sub">你存储的历史卦象</div>
+      </div>
+      <div class="gd-list" id="guaji-list"></div>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
 </div><!-- /phone -->
 
 <div class="toast" id="toast"></div>
-<div class="debug-bar" id="debug-bar">调试：页面已加载</div>
+<!-- <div class="debug-bar" id="debug-bar">调试：页面已加载</div> -->
 
 <script>
 // ── DATA ──
@@ -1026,6 +1061,342 @@ const GUA = [
     jiedu:'地上有水，相亲相近。此卦主联合与亲附，宜广结善缘，寻找志同道合之人，团结则强。',
     story:'战国时，苏秦游说六国合纵，以比卦之理说服各国君主：水依附大地，大地蓄养水分，相辅相成。六国若能如水与地般亲附，共同对抗秦国，则各自安全。诸侯被其说服，佩六国相印，一时风光无两。比卦告诉我们：人生需要盟友，善于结交真诚之人，彼此扶持，方能走得更远。',
     yao_key:'有孚比之→比之自内→比之匪人→外比之→显比→比之无首' },
+  { n:'风天小畜', short:'小畜', serial:'09', verdict:'小吉', keyword:'蓄势待发，积累资源。',
+    lines:[1,1,1,0,1,1],
+    guaci:'小畜，亨。密云不雨，自我西郊。象曰：风行天上，小畜；君子以懿文德。',
+    jiedu:'风行天上，云聚而未雨。此卦主积累与等待，资源尚在聚集，时机未到，宜修身蓄德，不可贸然行动。',
+    story:'汉代名儒郑玄年轻时家贫，以小畜自勉，游学四方，拜师问道，历经十余年积累，终成一代经学大师。小畜之象，如云气聚而未成雨，力量在积累，时机在等待，越是艰难时期，越需耐心修炼自身。待厚积之后，一朝风雨至，方能润泽四方。',
+    yao_key:'复自道→牵复→舆说辐→有孚→有孚挛如→既雨既处' },
+  { n:'天泽履', short:'履', serial:'10', verdict:'平', keyword:'谨慎前行，守礼无咎。',
+    lines:[1,1,0,1,1,1],
+    guaci:'履虎尾，不咥人，亨。象曰：上天下泽，履；君子以辨上下，定民志。',
+    jiedu:'踩在虎尾之上，须步步谨慎。此卦主礼节与分寸，当前处境有险，只要谨守礼仪、行事得当，便可化险为夷。',
+    story:'春秋时，晏婴出使楚国，楚王屡次戏弄，晏婴以礼对答，不卑不亢，每次都化解尴尬，令楚王反生敬意。履卦之义，非畏缩退让，而是在复杂处境中，以礼法为盾，以智慧为剑，不逾矩、不失态，在险境中走出一条平安之路。',
+    yao_key:'素履往→履道坦坦→眇能视→履虎尾→夬履→视履考祥' },
+  { n:'地天泰', short:'泰', serial:'11', verdict:'大吉', keyword:'天地交泰，诸事顺遂。',
+    lines:[1,1,1,0,0,0],
+    guaci:'泰，小往大来，吉亨。象曰：天地交，泰；后以财成天地之道。',
+    jiedu:'天地阴阳相交，万物生机盎然。此卦为六十四卦中最吉之象，事业、感情、财运均主顺遂，可大展身手。',
+    story:'《史记》载，周武王伐纣，占得泰卦，军师认为此乃天地交泰，正当其时，遂挥师进发，牧野一战，推翻商朝，建立周朝。泰卦象征天地阴阳和谐共处，上下相通，万事皆宜。此卦出现，是少数可以放心大胆去做的信号，但《易》亦提醒：泰极必有否，盛世须居安思危。',
+    yao_key:'拔茅茹→包荒→无平不陂→翩翩→帝乙归妹→城复于隍' },
+  { n:'天地否', short:'否', serial:'12', verdict:'小凶', keyword:'天地不交，宜静守待变。',
+    lines:[0,0,0,1,1,1],
+    guaci:'否之匪人，不利君子贞，大往小来。象曰：天地不交，否；君子以俭德辟难。',
+    jiedu:'天地阴阳相背，上下不通，万事阻滞。此卦主阻塞，当前环境不利，宜收敛韬光，静待时机转变，不宜强行推进。',
+    story:'东汉末年，天下大乱，忠臣良将屡屡受阻，奸臣当道，正是否卦之象。曹操麾下谋士荀彧深知否极泰来之理，在乱世中保全实力，等待时机，辅佐曹操逐步平定北方。否卦告诉我们：逆境时期，不要硬碰，要俭约节制，减少损耗，等待大环境改变，时来自然通达。',
+    yao_key:'拔茅茹→包承→包羞→有命无咎→休否→倾否' },
+  { n:'天火同人', short:'同人', serial:'13', verdict:'吉', keyword:'志同道合，携手共进。',
+    lines:[1,0,1,1,1,1],
+    guaci:'同人于野，亨。利涉大川，利君子贞。象曰：天与火，同人；君子以类族辨物。',
+    jiedu:'天火同向，志同道合之象。此卦主合作与联合，宜寻找志同道合的伙伴，共同面对困难，团结一致则无往不利。',
+    story:'三国时，刘备寻访诸葛亮，三顾茅庐，诚心感动了这位隐居的谋士。两人一见如故，如鱼得水，共同谱写了"三分天下"的传奇。同人卦之义，是真正的志同道合，不仅利益一致，更是理想相通。这样的合作，能突破重重困难，成就非凡事业。',
+    yao_key:'同人于门→同人于宗→伏戎于莽→乘其墉→同人先号啕→同人于郊' },
+  { n:'火天大有', short:'大有', serial:'14', verdict:'大吉', keyword:'光明正大，资源丰盛。',
+    lines:[1,1,1,1,0,1],
+    guaci:'大有，元亨。象曰：火在天上，大有；君子以遏恶扬善，顺天休命。',
+    jiedu:'火照天下，光明丰盛。此卦主丰收与富足，当前资源充盈，宜把握机会大展身手，同时宜惩恶扬善，方能持盈保泰。',
+    story:'唐太宗贞观年间，国力强盛，四方来朝，正是大有之象。太宗以史为鉴，遏制奸佞，提拔贤良，广纳谏言，成就"贞观之治"。大有卦告诉我们：当拥有丰盛资源时，更要公正用权，惩恶扬善，如此才能让"大有"持续，而不是昙花一现。',
+    yao_key:'无交害→大车以载→公用亨于天子→匪其彭→厥孚交如→自天祐之' },
+  { n:'地山谦', short:'谦', serial:'15', verdict:'吉', keyword:'谦逊自持，众人敬服。',
+    lines:[0,0,1,0,0,0],
+    guaci:'谦，亨，君子有终。象曰：地中有山，谦；君子以裒多益寡，称物平施。',
+    jiedu:'高山藏于地中，谦逊之象。此卦六爻皆吉，是六十四卦中唯一全吉之卦，谦虚低调，德行充盈，必有善终。',
+    story:'清代名臣曾国藩，戎马一生却从不居功自傲。平定太平天国后，他主动裁撤湘军，交还兵权，以谦卦为镜，终得善终。谦卦之义深远：山本高大，却甘藏地中；人本有才，却甘居人下。真正的谦逊不是虚伪，而是一种充盈的内在力量，令人真心敬服，是所有美德中最难得的一种。',
+    yao_key:'谦谦君子→鸣谦→劳谦→无不利撝谦→不富以其邻→鸣谦利用行师' },
+  { n:'雷地豫', short:'豫', serial:'16', verdict:'平', keyword:'顺势而动，勿贪逸乐。',
+    lines:[0,0,0,1,0,0],
+    guaci:'豫，利建侯行师。象曰：雷出地奋，豫；先王以作乐崇德。',
+    jiedu:'雷出地上，万物舒发。此卦主安乐与顺遂，但需防止耽于享乐、懈怠疏忽，乐而有节方能持久。',
+    story:'古时商纣王得意于国力强盛，大造酒池肉林，耽于淫乐，身边谏臣屡进忠言，皆被拒斥。纣王以为安逸即是福，不知豫卦警示：顺境之中需警醒，乐而无节则败。周文王观此，知商之将亡，乃励精图治，终有武王克商之业。',
+    yao_key:'鸣豫→介于石→盱豫→由豫→贞疾→冥豫' },
+  { n:'泽雷随', short:'随', serial:'17', verdict:'吉', keyword:'随机应变，顺势而为。',
+    lines:[1,0,0,0,1,1],
+    guaci:'随，元亨利贞，无咎。象曰：泽中有雷，随；君子以向晦入宴息。',
+    jiedu:'雷藏泽中，随时而动。此卦主顺应时势，因时制宜，不固执己见，能随机应变，则诸事顺遂。',
+    story:'战国时代，纵横家苏秦游说失败后，潦倒归家，饱受家人冷眼。他重新审视时局，改变策略，随机应变，游说六国合纵，一举成功，身挂六国相印。随卦之义：随不是随便，而是顺时势、察变化，在变局中找到最佳切入点，如雷随泽时而动，不固守成规。',
+    yao_key:'官有渝→系小子→系丈夫→随有获→孚于嘉→拘系之' },
+  { n:'山风蛊', short:'蛊', serial:'18', verdict:'小凶', keyword:'积弊已久，需整顿革新。',
+    lines:[0,1,1,0,0,1],
+    guaci:'蛊，元亨，利涉大川。先甲三日，后甲三日。象曰：山下有风，蛊；君子以振民育德。',
+    jiedu:'山下有风腐蚀，积弊成蛊。此卦主问题积累已久，当前处境需要大力整顿革新，不可姑息拖延。',
+    story:'北宋熙宁年间，王安石主持变法，正是为应对积弊已久的财政危机与军事颓势。他以蛊卦之理，力排保守，推行青苗法、募役法等变革。蛊卦提示：问题不解决，只会越积越深。真正的勇气，是在众多反对声中，坚定推动必要的改变，即使过程艰难，终将拨乱反正。',
+    yao_key:'干父之蛊→干母之蛊→干父之蛊小有悔→裕父之蛊→干父之蛊用誉→不事王侯' },
+  { n:'地泽临', short:'临', serial:'19', verdict:'吉', keyword:'大势来临，把握时机。',
+    lines:[1,1,0,0,0,0],
+    guaci:'临，元亨利贞。至于八月有凶。象曰：泽上有地，临；君子以教思无穷，容保民无疆。',
+    jiedu:'泽上有地，居高临下。此卦主时机来临，宜主动作为，把握机会，但也警示好景不长，须在顺境时做好准备。',
+    story:'春秋时，齐桓公在管仲辅佐下，国力渐强，正值临卦之象，时机大好，宜积极进取。管仲建议整顿内政、开放商贸、积累实力，终使齐国成为春秋第一霸主。临卦告诉我们：当大势来临，要主动承接，全力以赴；同时记住"至于八月有凶"的警示，盛时需为衰时做准备。',
+    yao_key:'咸临→咸临吉→甘临→至临→知临→敦临' },
+  { n:'风地观', short:'观', serial:'20', verdict:'平', keyword:'静观全局，以德感化。',
+    lines:[0,0,0,0,1,1],
+    guaci:'观，盥而不荐，有孚颙若。象曰：风行地上，观；先王以省方观民设教。',
+    jiedu:'风行大地，观察四方。此卦主观察与审视，宜退后一步，冷静观察全局，不轻率行动，以诚信感化他人。',
+    story:'古代帝王每逢要事，必先巡行四方，观察民情，了解实情后再决策施政，正是观卦之理。诸葛亮隐居隆中时，虽不出户，却广泛收集天下信息，深入分析三国形势，待刘备三顾而出，已胸有成竹。观卦之义：善于观察者，能在纷繁表象中看清本质，在行动前已知胜负。',
+    yao_key:'童观→窥观→观我生进退→观国之光→观我生→观其生' },
+  { n:'火雷噬嗑', short:'噬嗑', serial:'21', verdict:'平', keyword:'强力突破，执法必严。',
+    lines:[1,0,1,0,0,1],
+    guaci:'噬嗑，亨，利用狱。象曰：雷电，噬嗑；先王以明罚敕法。',
+    jiedu:'雷电交加，强力突破。此卦主障碍与阻隔，当前有阻力需要强力清除，宜果断处置，明确规则，执行到位。',
+    story:'秦始皇统一六国后，以强力推行书同文、车同轨、统一度量衡，正是噬嗑之象——用强力破除阻隔，建立统一秩序。噬嗑卦如雷电噬合，是打破障碍、处置问题的卦象，提示当遇到顽固阻力时，不可软弱姑息，须以雷霆手段、公正原则，果断处置，清除阻碍。',
+    yao_key:'屦校灭趾→噬肤灭鼻→噬腊肉遇毒→噬干胏→噬干肉得黄金→何校灭耳' },
+  { n:'山火贲', short:'贲', serial:'22', verdict:'小吉', keyword:'文饰得宜，内外兼修。',
+    lines:[1,0,0,1,0,1],
+    guaci:'贲，亨，小利有攸往。象曰：山下有火，贲；君子以明庶政，无敢折狱。',
+    jiedu:'山下有火，文采焕发。此卦主文饰与形象，内在充实后加以适当装饰，可增光彩，但需注意形式不可超越内容。',
+    story:'汉代著名辞赋家司马相如，文采出众，辞藻华美，以《子虚赋》打动汉武帝，名扬天下。然而《易》以贲卦提示：文饰是锦上添花，内在空洞的华丽是浮华。贲卦小利有攸往，而非大利，提示我们：形象包装可以，但不可本末倒置，内在修为才是根本，外在文饰是辅助。',
+    yao_key:'贲其趾→贲其须→贲如濡如→贲如皤如→贲于丘园→白贲无咎' },
+  { n:'山地剥', short:'剥', serial:'23', verdict:'凶', keyword:'阴盛剥落，宜止不宜进。',
+    lines:[0,0,0,0,0,1],
+    guaci:'剥，不利有攸往。象曰：山附于地，剥；上以厚下安宅。',
+    jiedu:'高山崩塌归于大地，剥落之象。此卦主衰退与剥蚀，此时不宜进取，须守住根本，等待阴极阳来、局势逆转。',
+    story:'东汉末年，朝廷腐败，宦官、外戚轮番争权，忠良臣子屡遭剥落贬斥，正是剥卦之象。此时识时务者保全自身，待机而动。"留得青山在，不怕没柴烧"，剥卦告诉我们：衰退期的最高智慧是保存实力，不逆势硬撑，等待物极必反、否极泰来。',
+    yao_key:'剥床以足→剥床以辨→剥之无咎→剥床以肤→贯鱼宫人宠→硕果不食' },
+  { n:'地雷复', short:'复', serial:'24', verdict:'吉', keyword:'阳气回复，重新出发。',
+    lines:[1,0,0,0,0,0],
+    guaci:'复，亨。出入无疾，朋来无咎。象曰：雷在地中，复；先王以至日闭关。',
+    jiedu:'雷藏地中，阳气初回。此卦主回复与重生，冬至一阳生，低谷已过，正是重新出发的时机，宜积极调整。',
+    story:'卧薪尝胆的越王勾践，被吴国俘虏，沦为阶下囚，忍辱多年，等待时机。终于等到阳气回复、机会到来，励精图治，终于复国雪耻，成就"三千越甲可吞吴"的传奇。复卦是从低谷走向复苏的卦象，提示我们：黑暗过后是黎明，困境之后是转机，最重要的是不放弃。',
+    yao_key:'不远复→休复→频复→中行独复→敦复→迷复' },
+  { n:'天雷无妄', short:'无妄', serial:'25', verdict:'平', keyword:'遵循天道，不可妄为。',
+    lines:[1,0,0,1,1,1],
+    guaci:'无妄，元亨利贞。其匪正有眚，不利有攸往。象曰：天下雷行，物与无妄。',
+    jiedu:'天下雷行，万物诚实。此卦主诚信与自然，宜顺应天道规律行事，不可投机取巧、违背自然，否则必有灾祸。',
+    story:'古人云"种瓜得瓜，种豆得豆"，这是无妄之理。汉代名医张仲景，按照天道规律研究医理，实事求是，不妄作臆断，终成《伤寒杂病论》，造福千秋。无妄卦提示：人类最大的错误是妄图违背规律，走捷径、图侥幸。顺应自然、脚踏实地，才是正道。',
+    yao_key:'无妄往吉→不耕获→无妄之灾→可贞无咎→无妄之疾→无妄行有眚' },
+  { n:'山天大畜', short:'大畜', serial:'26', verdict:'中吉', keyword:'积蓄深厚，待机大用。',
+    lines:[1,1,1,0,0,1],
+    guaci:'大畜，利贞，不家食，吉，利涉大川。象曰：天在山中，大畜；君子以多识前言往行，以畜其德。',
+    jiedu:'天藏山中，蓄积深厚。此卦主大量积累，不论是知识、财富还是实力，均在大量蓄积中，时机成熟必将大展身手。',
+    story:'姜太公年过七旬，仍在渭水垂钓，许多人以为他虚度时光，实则他多年来研习兵法、积累智慧，等待明主。终遇周文王，一展胸中所学，辅佐武王克商，封神拜将。大畜卦告诉我们：深厚的积累，是成大事的必要条件，看似沉寂的岁月，都是蓄势待发。',
+    yao_key:'有厉利已→舆说輹→良马逐→童牛之牿→豮豕之牙→何天之衢' },
+  { n:'山雷颐', short:'颐', serial:'27', verdict:'平', keyword:'颐养正道，慎言节食。',
+    lines:[1,0,0,0,0,1],
+    guaci:'颐，贞吉，观颐，自求口实。象曰：山下有雷，颐；君子以慎言语，节饮食。',
+    jiedu:'山下雷动，颐养之象。此卦提醒养生之道：饮食有节，言语谨慎，培养身心健康，不可过分贪求口腹之欲。',
+    story:'古代养生家彭祖，相传活了八百岁，其秘诀正在于颐卦之道：饮食有节，不贪不暴；言语谨慎，不妄言伤人；保持内心平静，养气蓄神。颐卦对现代人的启示：生活中过度消费信息、饮食无度、言辞激烈，皆是损耗。真正的养生，是慎言节食，保持心灵的清净与身体的节律。',
+    yao_key:'舍尔灵龟→颠颐→拂颐→颠颐吉→拂经居贞吉→由颐厉吉' },
+  { n:'泽风大过', short:'大过', serial:'28', verdict:'小凶', keyword:'超越常规，慎防折断。',
+    lines:[0,1,1,1,1,0],
+    guaci:'大过，栋桡，利有攸往，亨。象曰：泽灭木，大过；君子以独立不惧，遁世无闷。',
+    jiedu:'大梁弯曲，超重将折。此卦主超越与过度，当前压力过大或行动过激，需及时调整，否则有折断之虞。',
+    story:'三国时，关羽独守荆州，面对曹魏、东吴两方压力，仍孤军北伐，水淹七军，威震华夏，是大过之象。然而过度出击、后方空虚，终被吕蒙偷袭，败走麦城，英雄末路。大过卦警示：超常发挥可成就奇迹，但若超过极限，则危机四伏，需及时回头，量力而行。',
+    yao_key:'藉用白茅→枯杨生稊→栋桡→栋隆→枯杨生华→过涉灭顶' },
+  { n:'坎为水', short:'坎', serial:'29', verdict:'小凶', keyword:'险中求生，守正待援。',
+    lines:[0,1,0,0,1,0],
+    guaci:'习坎，有孚，维心亨，行有尚。象曰：水洊至，习坎；君子以常德行，习教事。',
+    jiedu:'重重险难，水流不止。此卦主险境与困难，当前处于重重危机中，须坚守正道，保持诚信，等待援助，切勿慌乱。',
+    story:'苏武被匈奴扣押北海，牧羊十九年，历尽苦寒险阻，正是坎卦之象。他持节不降，坚守汉臣之志，以诚信和毅力度过重重险难，终在汉昭帝时得以回国，名垂青史。坎卦之义：险境中最重要的是内心不崩溃，守住本心，终将渡过难关，迎来光明。',
+    yao_key:'习坎入于坎窞→坎有险→来之坎坎→樽酒簋贰→坎不盈→系用徽纆' },
+  { n:'离为火', short:'离', serial:'30', verdict:'吉', keyword:'文明光耀，附丽正道。',
+    lines:[1,0,1,1,0,1],
+    guaci:'离，利贞，亨，畜牝牛，吉。象曰：明两作，离；大人以继明照于四方。',
+    jiedu:'火光明照，附丽之象。此卦主光明与文采，宜以才华照亮四方，依附正道而行，如太阳附丽天空，光明持续。',
+    story:'诗仙李白，才华横溢，文采斐然，附丽大唐盛世，留下无数千古名篇。离卦如太阳，既需要自身光明，也需要依附正确的轨道运行。此卦提示：发挥才华之时，需依附正道，如火依附薪柴，才能持续燃烧，否则孤焰难久。',
+    yao_key:'履错然敬之→黄离元吉→日昃之离→突如其来如→出涕沱若→王用出征' },
+  { n:'泽山咸', short:'咸', serial:'31', verdict:'吉', keyword:'感应交流，真诚相通。',
+    lines:[0,0,1,1,0,0],
+    guaci:'咸，亨，利贞，取女吉。象曰：山上有泽，咸；君子以虚受人。',
+    jiedu:'山上有泽，感应相通。此卦为下经之首，主情感与感应，真诚的心灵感应可以突破一切障碍，宜以诚相待。',
+    story:'牛郎织女的传说，正是咸卦之象。两颗真诚的心，即使天各一方，仍能感应相通，每年七夕以鹊桥相会。咸卦告诉我们：真正的情感联结，不需要言语，心有灵犀便能感应。无论是爱情、友情还是商业关系，真诚感应是一切美好关系的基础。',
+    yao_key:'咸其拇→咸其腓→咸其股→贞吉悔亡→咸其脢→咸其辅颊舌' },
+  { n:'雷风恒', short:'恒', serial:'32', verdict:'中吉', keyword:'恒久坚持，终见成效。',
+    lines:[1,1,0,0,1,1],
+    guaci:'恒，亨，无咎，利贞，利有攸往。象曰：雷风，恒；君子以立不易方。',
+    jiedu:'雷风相随，恒久不变。此卦主持久与坚守，宜坚持既定方向，不轻易改变，持之以恒必有成就。',
+    story:'王羲之学书法，临池洗砚，将一池清水染成墨池，数十年如一日苦练，终成"书圣"。这正是恒卦之精神：在正确的方向上，不因外界诱惑或短期挫折而动摇，持之以恒，功到自然成。现代人最缺的，不是找到方向，而是在方向已定后的持续坚守。',
+    yao_key:'浚恒→悔亡→不恒其德→田无禽→恒其德贞→振恒' },
+  { n:'天山遁', short:'遁', serial:'33', verdict:'平', keyword:'适时退隐，以退为进。',
+    lines:[0,0,1,1,1,1],
+    guaci:'遁，亨，小利贞。象曰：天下有山，遁；君子以远小人，不恶而严。',
+    jiedu:'天退于山后，隐遁之象。此卦主退隐与撤离，当前局势不利，宜主动退让，远离是非，以退为进，保全实力。',
+    story:'范蠡辅佐越王勾践复国后，深知"兔死狗烹"之理，功成名就时急流勇退，改名陶朱公，经商致富。而同僚文种留恋权位，不懂遁退，最终被勾践赐死。遁卦告诉我们：有时候退，是最聪明的前进方式。知进退、识时务，才是真正的大智慧。',
+    yao_key:'遁尾→执之用黄牛→系遁→好遁→嘉遁贞吉→肥遁无不利' },
+  { n:'雷天大壮', short:'大壮', serial:'34', verdict:'小吉', keyword:'阳气充沛，行须守正。',
+    lines:[1,1,1,1,0,0],
+    guaci:'大壮，利贞。象曰：雷在天上，大壮；君子以非礼勿履。',
+    jiedu:'雷在天上，阳气大盛。此卦主强盛与力量，当前实力充足，但强盛时更需守礼守正，否则盛极必衰。',
+    story:'楚霸王项羽，力拔山河，雄踞一时，是大壮之象。然而他刚愎自用，不守仁义，滥用武力，最终在垓下被围，乌江自刎。大壮卦警示：力量强大时，更需要礼义约束。无礼之壮，如猛虎无缰，迟早伤人伤己。真正的强大，是力量与智慧的结合，是刚健而不失柔道。',
+    yao_key:'壮于趾→贞吉→小人用壮→贞吉悔亡→丧羊于易→羝羊触藩' },
+  { n:'火地晋', short:'晋', serial:'35', verdict:'吉', keyword:'日出东方，进取光明。',
+    lines:[0,0,0,1,0,1],
+    guaci:'晋，康侯用锡马蕃庶，昼日三接。象曰：明出地上，晋；君子以自昭明德。',
+    jiedu:'太阳升出地平线，光明上升之象。此卦主进取与提升，当前是上升阶段，宜主动进取，展示才华，必得赏识。',
+    story:'商鞅变法，使秦国从落后走向强盛，正是晋卦之象，如太阳从地平线升起，光照四方。晋卦提示：进取的时机来临，就要主动展示才能，让自己的光芒被看见。不要在该发光的时候藏拙，也不要在该进取的时候退缩。光明正大地展现自己，是这个卦对我们的鼓励。',
+    yao_key:'晋如摧如→晋如愁如→众允悔亡→晋如鼫鼠→悔亡失得→晋其角' },
+  { n:'地火明夷', short:'明夷', serial:'36', verdict:'小凶', keyword:'光明受损，韬光养晦。',
+    lines:[1,0,1,0,0,0],
+    guaci:'明夷，利艰贞。象曰：明入地中，明夷；君子以莅众，用晦而明。',
+    jiedu:'光明入于地中，遮蔽之象。此卦主黑暗与压制，当前处于不利环境，宜隐藏才华，韬光养晦，等待光明再临。',
+    story:'商末，箕子见纣王无道，深知直谏必死，乃装疯卖傻，佯狂为奴，保全自身。此正是明夷之道——用晦而明。近代邓小平三起三落，每次被打倒都忍辱蛰伏，韬光养晦，待机而动，最终迎来改革开放的春天。明夷告诉我们：黑暗中，保存自己才是最重要的使命。',
+    yao_key:'明夷于飞→明夷夷于左股→明夷于南狩→入于左腹→箕子之明夷→不明晦' },
+  { n:'风火家人', short:'家人', serial:'37', verdict:'小吉', keyword:'守正有序，利沟通关系。',
+    lines:[1,0,1,1,0,1],
+    guaci:'家人，利女贞。象曰：风自火出，家人；君子以言有物而行有恒。',
+    jiedu:'风自火出，家道正则万事兴。此卦主家庭与内部关系，宜整理内部秩序，亲近之人宜坦诚相待，内部和谐则外部顺遂。',
+    story:'《颜氏家训》是古代最著名的家庭教育典籍，正体现了家人卦的精神：言有物——说话有内容，不空洞；行有恒——做事有始有终，不半途而废。家人卦告诉我们：家庭是社会最基本的单位，家道正则个人立身有本，事业有根。处理好家庭关系，是人生大事业的基础。',
+    yao_key:'闲有家→无攸遂→家人嗃嗃→富家大吉→王假有家→有孚威如' },
+  { n:'火泽睽', short:'睽', serial:'38', verdict:'小凶', keyword:'意见相左，求同存异。',
+    lines:[1,0,1,1,0,0],
+    guaci:'睽，小事吉。象曰：上火下泽，睽；君子以同而异。',
+    jiedu:'火上水下，背离分裂。此卦主分歧与矛盾，当前与他人存在明显分歧，宜求同存异，不宜强求一致，小事可成，大事宜缓。',
+    story:'三国时期，周瑜与诸葛亮，一个效力东吴，一个辅佐刘备，立场相对，是睽卦之象。然而赤壁之战，两人在抗曹这一点上同心协力，终于大破曹军。睽卦之理：即使存在根本差异，也能在共同目标上合作，"同而异"——找到相同之处，接受不同之处，是处理分歧的最高智慧。',
+    yao_key:'悔亡→遇主于巷→见舆曳→睽孤遇元夫→悔亡厥宗噬肤→睽孤见豕负涂' },
+  { n:'水山蹇', short:'蹇', serial:'39', verdict:'小凶', keyword:'前路多阻，反求诸己。',
+    lines:[0,1,0,0,0,1],
+    guaci:'蹇，利西南，不利东北，利见大人，贞吉。象曰：山上有水，蹇；君子以反身修德。',
+    jiedu:'山上有水，步步维艰。此卦主艰难险阻，前路多阻，宜停下来反思自身，寻求高人指点，向有利方向迂回前进。',
+    story:'孟子曰"天将降大任于斯人也，必先苦其心志，劳其筋骨"，正是蹇卦之义。蹇卦提示：遇到重重阻碍时，不要一味硬冲，要反省自身是否有问题，寻找迂回路线，必要时寻求贵人相助。山路难行时，停下来辨清方向，比蛮力强冲更重要。',
+    yao_key:'往蹇来誉→王臣蹇蹇→往蹇来反→往蹇来连→大蹇朋来→往蹇来硕' },
+  { n:'雷水解', short:'解', serial:'40', verdict:'吉', keyword:'化解困局，宜宽恕。',
+    lines:[0,1,0,0,1,1],
+    guaci:'解，利西南。无所往，其来复吉。有攸往，夙吉。象曰：雷雨作，解；君子以赦过宥罪。',
+    jiedu:'雷雨过后，困局化解。此卦主解脱与释放，当前困难正在消散，宜趁机宽恕过失，恢复关系，轻装前行。',
+    story:'唐太宗李世民，玄武门之变后，对曾支持兄弟的旧臣，多数采取宽恕政策，甚至重用前敌魏征。正是解卦之道：困局化解后，宽恕是最明智的选择，不计前嫌，反而能凝聚人心，开创新局。解卦告诉我们：放下执念和怨恨，是对自己最大的解脱，也是走向新生的必要条件。',
+    yao_key:'无咎→解而拇→负且乘→解而拇→君子维有解→公用射隼' },
+  { n:'山泽损', short:'损', serial:'41', verdict:'平', keyword:'减损以益，舍小取大。',
+    lines:[1,1,0,0,0,1],
+    guaci:'损，有孚，元吉，无咎，可贞，利有攸往。象曰：山下有泽，损；君子以惩忿窒欲。',
+    jiedu:'山下有泽，减损积累。此卦主减法与舍弃，适当减损当下，换取长远收益，节制欲望与愤怒，方能长久。',
+    story:'古代工匠制作精美漆器，需要一次次地打磨减材，每次减损都让器物更精美。损卦告诉我们：人生有时需要做减法，减去多余的欲望、减去不必要的社交、减去愤怒和计较，专注于真正重要的事情。这种主动的减损，反而是一种增益——精简之后，生命更有质量。',
+    yao_key:'已事遄往→利贞征凶→三人行损一人→损其疾→或益之→弗损益之' },
+  { n:'风雷益', short:'益', serial:'42', verdict:'大吉', keyword:'增益他人，自身也丰。',
+    lines:[1,0,0,0,1,1],
+    guaci:'益，利有攸往，利涉大川。象曰：风雷，益；君子以见善则迁，有过则改。',
+    jiedu:'风雷相益，增益之象。此卦为六十四卦中最益人之卦，助人者自助，见善则学，有过则改，诸事顺遂。',
+    story:'北宋范仲淹，自幼清贫，读书成才后，广设义学，资助贫寒学子，正是益卦之象。他倡导"先天下之忧而忧，后天下之乐而乐"，以利他之心行事，最终在政治、军事、文学各方面都取得卓越成就。益卦告诉我们：真正的增益，来自于对他人的贡献，付出越多，收获越丰。',
+    yao_key:'利用为大作→或益之→益之用凶事→中行告公从→有孚惠心→莫益之' },
+  { n:'泽天夬', short:'夬', serial:'43', verdict:'小凶', keyword:'决断去除，防小人。',
+    lines:[1,1,1,1,1,0],
+    guaci:'夬，扬于王庭，孚号，有厉，告自邑，不利即戎，利有攸往。象曰：泽上于天，夬；君子以施禄及下，居德则忌。',
+    jiedu:'泽水决口，决断之象。此卦主果断决策，须清除内部小人或隐患，决断要公开正大，切勿以暴制暴，宜以正道处之。',
+    story:'汉代霍去病征伐匈奴，果断决策，深入敌后，是夬卦果决之勇。然而汉武帝晚年，酷吏盛行，以暴制暴，反而动摇国本。夬卦提示：清除隐患需要决断，但手段必须正大光明，不可以私怨公报，不可以暴力代替正义，否则解决了一个问题，又制造了新的问题。',
+    yao_key:'壮于前趾→惕号莫夜有戎→壮于頄→臀无肤其行次且→苋陆夬夬→无号' },
+  { n:'天风姤', short:'姤', serial:'44', verdict:'小凶', keyword:'意外相遇，慎防阴柔。',
+    lines:[0,1,1,1,1,1],
+    guaci:'姤，女壮，勿用取女。象曰：天下有风，姤；后以施命诰四方。',
+    jiedu:'天下有风，意外相遇。此卦主不期而遇，一阴初生，阴柔之势渐起，需警惕潜在风险，不可轻信初见之人。',
+    story:'特洛伊战争，因帕里斯与海伦的意外相遇而起，正是姤卦之象。一次不经意的相遇，引发了十年战争，颠覆了一个文明。姤卦提示：意外的相遇往往是命运的转折点，有时是机会，有时是危险。对于突然出现的机会或人物，既不可完全拒绝，也不可轻率接受，需要审慎辨别。',
+    yao_key:'系于金柅→包有鱼→臀无肤→包无鱼→以杞包瓜→姤其角' },
+  { n:'泽地萃', short:'萃', serial:'45', verdict:'吉', keyword:'聚合众力，祭祀正道。',
+    lines:[0,0,0,1,1,0],
+    guaci:'萃，亨，王假有庙，利见大人，亨，利贞，用大牲吉，利有攸往。象曰：泽上于地，萃；君子以除戎器，戒不虞。',
+    jiedu:'泽水汇聚于地，众人聚合之象。此卦主聚集与凝聚，宜集合众力，共谋大事，有贵人相助，适合组织集体活动。',
+    story:'汉高祖刘邦，本是一介亭长，却善于聚合人才，萧何、张良、韩信各有所长，在他麾下各展才华，共同灭楚兴汉。萃卦之义：个人力量有限，聚合众力才能成就大业。领导者的核心能力，是能够凝聚各种人才，让每个人在正确位置发挥最大价值。',
+    yao_key:'有孚不终→引吉无咎→萃如嗟如→大吉无咎→萃有位无咎→赍咨涕洟' },
+  { n:'地风升', short:'升', serial:'46', verdict:'大吉', keyword:'顺势上升，积小成大。',
+    lines:[1,1,0,0,0,0],
+    guaci:'升，元亨，用见大人，勿恤，南征吉。象曰：地中生木，升；君子以顺德，积小以高大。',
+    jiedu:'木生地中向上生长，上升之象。此卦主向上发展，顺应环境，积小成大，脚踏实地，必将节节高升。',
+    story:'一棵大树的成长，从种子萌芽开始，年年积累，终成参天大树，正是升卦之道。邓小平改革开放，从小处着手，先设经济特区，积累经验，再逐步推广，实现了中国经济的腾飞。升卦告诉我们：上升需要脚踏实地，积小步成大步，不可急于求成，顺德而行则自然高升。',
+    yao_key:'允升大吉→孚乃利用禴→升虚邑→王用亨于岐山→贞吉升阶→冥升利于不息' },
+  { n:'泽水困', short:'困', serial:'47', verdict:'小凶', keyword:'身陷困境，守志不屈。',
+    lines:[0,1,0,1,1,0],
+    guaci:'困，亨，贞，大人吉，无咎，有言不信。象曰：泽无水，困；君子以致命遂志。',
+    jiedu:'泽中无水，枯竭之困。此卦主困境与压抑，当前处于最困难时期，言语无力，须守志不屈，大人物在此境中仍可吉祥。',
+    story:'苏格拉底被雅典人以"败坏青年"之名审判，面对死亡，仍坚持真理，从容赴死。困卦之人，在最绝望的处境中，仍能守志，这正是大人之所为。困境之中言语无人信，只有行动才能证明自己。困卦告诉我们：真正的伟大，往往在最困难的时刻才显现出来。',
+    yao_key:'臀困于株木→困于酒食→困于石→来徐徐困于金车→劓刖困于赤绂→困于葛藟' },
+  { n:'水风井', short:'井', serial:'48', verdict:'平', keyword:'挖掘内在，取之不竭。',
+    lines:[0,1,1,0,1,0],
+    guaci:'井，改邑不改井，无丧无得，往来井井。象曰：木上有水，井；君子以劳民劝相。',
+    jiedu:'木桔汲水，水源恒在。此卦主内在资源与价值，无论环境如何改变，真正的价值不会消失，宜挖掘内在潜力。',
+    story:'孔子周游列国，屡遭碰壁，然而他的学问修为如同井水，挖掘越深，价值越大，永不枯竭。孔子弟子三千，贤人七十二，其中不乏各国要员，正因为他是取之不竭的智慧之源。井卦告诉我们：人最核心的资产是内在的能力和修为，这是别人拿不走的财富，也是真正可持续的竞争力。',
+    yao_key:'井泥不食→井谷射鲋→井渫不食→井甃无咎→井冽寒泉食→井收勿幕' },
+  { n:'泽火革', short:'革', serial:'49', verdict:'中吉', keyword:'变革除旧，顺时而动。',
+    lines:[1,0,1,1,1,0],
+    guaci:'革，已日乃孚，元亨利贞，悔亡。象曰：泽中有火，革；君子以治历明时。',
+    jiedu:'泽中有火，水火相克，变革之象。此卦主改革与创新，时机成熟时须果断变革，除旧布新，顺应时代，方可元亨。',
+    story:'商鞅变法，彻底变革秦国旧制，触动贵族利益，历经重重阻力，最终使秦国富强，为统一六国奠定基础。革卦之义：改变是痛苦的，但不改变会更痛苦。当旧制度已不适应新时代，需要有人站出来，承担变革的代价，换取未来的可能。这是革卦最深刻的教导。',
+    yao_key:'巩用黄牛→已日乃革之→征凶贞厉→悔亡有孚改命吉→大人虎变→君子豹变' },
+  { n:'火风鼎', short:'鼎', serial:'50', verdict:'大吉', keyword:'鼎新革故，文明昌盛。',
+    lines:[1,0,1,1,1,1],
+    guaci:'鼎，元吉，亨。象曰：木上有火，鼎；君子以正位凝命。',
+    jiedu:'木火烹饪，鼎新之象。此卦主文明建设与革新创造，在稳固的基础上开创新局，是事业上升、文明进步的吉象。',
+    story:'鼎是中国古代最重要的礼器，代表国家权力与文明传承。周朝立国，铸九鼎以定天下，正是鼎卦之象——在稳固的制度基础上，建立新的文明秩序。鼎卦告诉我们：革新创造需要稳固的基础，轻浮的创新如同无鼎之炊，是无根之木。在尊重传统的基础上革新，才能持久。',
+    yao_key:'鼎颠趾→鼎有实→鼎耳革→鼎折足→鼎黄耳金铉→鼎玉铉' },
+  { n:'震为雷', short:'震', serial:'51', verdict:'平', keyword:'雷霆震动，反省自强。',
+    lines:[1,0,0,1,0,0],
+    guaci:'震，亨。震来虩虩，笑言哑哑，震惊百里，不丧匕鬯。象曰：洊雷，震；君子以恐惧修省。',
+    jiedu:'雷声震动，惊而后省。此卦主突发事件与冲击，会有令人震惊的变动，宜以恐惧之心反省修身，转危为机。',
+    story:'古代战场上，鼓声如雷，将士闻雷而奋，这是震卦正用。越王勾践兵败会稽，受到极大震动，痛定思痛，卧薪尝胆，以震惊之痛激发自省自强，终于完成复国大业。震卦告诉我们：危机和冲击是人生的警醒之声，不应逃避，而应以恐惧之心反省自身，借势奋起，方能转化危机为成长的契机。',
+    yao_key:'震来虩虩→震来厉→震苏苏→震遂泥→震往来厉→震索索' },
+  { n:'艮为山', short:'艮', serial:'52', verdict:'平', keyword:'适时止步，静心安神。',
+    lines:[0,0,1,0,0,1],
+    guaci:'艮其背，不获其身，行其庭，不见其人，无咎。象曰：兼山，艮；君子以思不出其位。',
+    jiedu:'止于背，不追不逃。此卦主停止与静定，宜暂停当前行动，静心思考，不越位行事，把握自己的本分和边界。',
+    story:'禅宗有"知止而后有定"的说法，正是艮卦之道。宋代苏轼被贬黄州，若继续在朝廷奔波，必遭更大打击；他选择停下，在黄州写下《赤壁赋》《念奴娇》等千古名篇，成就了文学生命的高峰。艮卦告诉我们：有时候，停下来比继续前行更需要勇气，而停下来休养生息，往往是为了更好地出发。',
+    yao_key:'艮其趾→艮其腓→艮其限→艮其身→艮其辅→敦艮吉' },
+  { n:'风山渐', short:'渐', serial:'53', verdict:'吉', keyword:'循序渐进，水到渠成。',
+    lines:[0,0,1,0,1,1],
+    guaci:'渐，女归吉，利贞。象曰：山上有木，渐；君子以居贤德善俗。',
+    jiedu:'木在山上渐渐生长，循序渐进之象。此卦主稳步前进，一步一步积累，不急不躁，如大雁南飞，按序而行，终达目的。',
+    story:'大雁南飞，总是排成整齐的队形，老雁领队，幼雁跟随，按次序飞行，这是渐卦的最美写照。渐卦爻辞以大雁的不同栖止之处为喻，告诉我们：任何目标的达成，都需要一步一个脚印。急于求成往往适得其反，循序渐进才是真正的捷径。',
+    yao_key:'鸿渐于干→鸿渐于磐→鸿渐于陆→鸿渐于木→鸿渐于陵→鸿渐于阿' },
+  { n:'雷泽归妹', short:'归妹', serial:'54', verdict:'小凶', keyword:'名分未定，慎重行事。',
+    lines:[1,0,0,1,1,0],
+    guaci:'归妹，征凶，无攸利。象曰：泽上有雷，归妹；君子以永终知敝。',
+    jiedu:'雷动泽上，不守名分。此卦主关系失当与名分问题，宜明确关系与立场，在不正当的处境中强行前进必有凶险。',
+    story:'西汉赵飞燕姐妹，以美色入宫，一步步干预朝政，不守妃嫔本分，终酿悲剧——汉成帝死后，赵飞燕被废为庶人，最终自尽。归妹卦警示：处于不正当的位置或关系中时，要么改变关系，使之名分正当；要么谨守本分，不越雷池一步，否则前进越多，失去越多。',
+    yao_key:'归妹以娣→眇能视→归妹以须→归妹愆期→帝乙归妹→女承筐无实' },
+  { n:'雷火丰', short:'丰', serial:'55', verdict:'中吉', keyword:'盛极之时，居安思危。',
+    lines:[1,0,0,1,0,1],
+    guaci:'丰，亨，王假之，勿忧，宜日中。象曰：雷电皆至，丰；君子以折狱致刑。',
+    jiedu:'雷电俱盛，丰收之象。此卦主极盛与丰裕，当前处于鼎盛时期，但盛极必衰，宜趁盛时居安思危，明断是非。',
+    story:'唐朝玄宗开元年间，是丰卦最完美的体现——经济繁荣，文化昌盛，国力强大，盛世空前。然而玄宗晚年迷恋杨贵妃，疏于政务，盛极而衰，安史之乱一举倾覆盛世。丰卦的警示：繁盛之时是危机潜伏之时，越是在高峰，越要保持清醒，居安思危，方能持久。',
+    yao_key:'遇其配主→丰其蔀→丰其沛→丰其蔀→来章有庆誉→丰其屋' },
+  { n:'火山旅', short:'旅', serial:'56', verdict:'小凶', keyword:'漂泊在外，谨慎低调。',
+    lines:[0,0,1,1,0,1],
+    guaci:'旅，小亨，旅贞吉。象曰：山上有火，旅；君子以明慎用刑而不留狱。',
+    jiedu:'山上有火，漂泊之象。此卦主旅途与漂泊，身处异乡或陌生环境，宜低调谨慎，不宜大动干戈，守正则小有亨通。',
+    story:'李白一生漂泊，"举头望明月，低头思故乡"道出了旅人的孤独。他走遍山川，见识广博，但也历尽漂泊之苦。旅卦告诉我们：在陌生环境或过渡期中，最重要的是低调谨慎，不冒进，不张扬。漂泊虽苦，但也是积累见识的机会，守住本心，方能旅途平安。',
+    yao_key:'旅琐琐→旅即次→旅焚其次→旅于处→射雉一矢亡→鸟焚其巢' },
+  { n:'巽为风', short:'巽', serial:'57', verdict:'平', keyword:'柔顺贯通，潜移默化。',
+    lines:[0,1,1,0,1,1],
+    guaci:'巽，小亨，利有攸往，利见大人。象曰：随风，巽；君子以申命行事。',
+    jiedu:'风行无处不入，柔顺渗透之象。此卦主柔顺与渗透，宜以柔克刚，循序渐进，不可强硬对抗，柔顺则无往不利。',
+    story:'水能穿石，不因强硬，而因坚持，这是巽卦之道。外交家尼克松访华，以柔和低姿态打破中美二十年坚冰，没有硬碰硬，而是以迂回、渗透的方式逐步建立关系，最终促成外交突破。巽卦告诉我们：有些问题，靠力量解决不了，需要如风般渗透，一点一点改变，时间是最强的武器。',
+    yao_key:'进退利武人之贞→巽在床下→频巽吝→悔亡田获三品→贞吉悔亡无不利→巽在床下' },
+  { n:'兑为泽', short:'兑', serial:'58', verdict:'吉', keyword:'喜悦相交，言语顺和。',
+    lines:[1,1,0,1,1,0],
+    guaci:'兑，亨，利贞。象曰：丽泽，兑；君子以朋友讲习。',
+    jiedu:'两泽相连，喜悦之象。此卦主喜乐与交流，宜与朋友讲学切磋，分享喜悦，言语和悦则人缘顺畅，诸事顺遂。',
+    story:'孔子说"有朋自远方来，不亦乐乎"，正是兑卦之精神。两泽相连，水流相通，如同知己之间的交流，彼此滋养，共同成长。兑卦提示：人生需要真正的朋友，需要能够交流思想、分享喜悦的知己。与良友讲学，是人生最大的快乐之一，也是成长最快的方式。',
+    yao_key:'和兑吉→孚兑吉→来兑凶→商兑未宁→孚于剥有厉→引兑' },
+  { n:'风水涣', short:'涣', serial:'59', verdict:'平', keyword:'化解凝聚，疏通流畅。',
+    lines:[0,1,0,0,1,1],
+    guaci:'涣，亨，王假有庙，利涉大川，利贞。象曰：风行水上，涣；先王以享于帝立庙。',
+    jiedu:'风行水上，涣散流通。此卦主消散与疏通，旧有积聚或隔阂正在消散，宜顺势疏通，化解凝固，建立新的联结。',
+    story:'诸葛亮七擒孟获，不用强力征服，而是以德化之，让孟获心服口服，这是涣卦之法——化解对立，疏通隔阂，比武力征服更有效。涣卦提示：当关系僵化、矛盾积聚时，需要像风吹散聚集的水一样，以柔顺疏导的方式化解，而非强行打破，如此才能真正解决问题。',
+    yao_key:'用拯马壮吉→涣奔其机→涣其躬→涣其群元吉→涣汗其大号→涣其血去' },
+  { n:'水泽节', short:'节', serial:'60', verdict:'平', keyword:'适度节制，不可苦节。',
+    lines:[1,1,0,0,1,0],
+    guaci:'节，亨，苦节不可贞。象曰：泽上有水，节；君子以制数度，议德行。',
+    jiedu:'泽上有水，节制之象。此卦主适度与节制，凡事有节则通，但过度苦节则不可持久，需找到适当的平衡点。',
+    story:'曾国藩一生严于律己，但他也明白节制有度。他规定家人每日写日记、练书法，但也允许适当娱乐，不要求苦行式的刻苦。节卦告诉我们：节制是美德，但过度苦节是负担，反而会让人崩溃。找到让自己能够持续的节奏，比一时激进更重要。制度要合理，才能长久。',
+    yao_key:'不出户庭无咎→不出门庭凶→不节若则嗟若→安节亨→甘节吉→苦节贞凶' },
+  { n:'风泽中孚', short:'中孚', serial:'61', verdict:'大吉', keyword:'内心诚信，感化万物。',
+    lines:[1,1,0,0,1,1],
+    guaci:'中孚，豚鱼吉，利涉大川，利贞。象曰：泽上有风，中孚；君子以议狱缓死。',
+    jiedu:'风泽上有诚信之气，内心真诚之象。此卦为诚信最高体现，以真诚感化，连豚鱼都可感动，真诚之人无往不利。',
+    story:'春秋时季札出使，将宝剑赠给已死的徐国国君，此时国君已无从接受，然而季札仍然兑现承诺，把宝剑挂在国君墓前。这种不需要回报的诚信，正是中孚卦之精神——内心真诚不是为了利益，而是出于本性。这种诚信能感动天地，令人折服，是所有关系中最强大的粘合剂。',
+    yao_key:'虞吉有他不燕→鸣鹤在阴→得敌或鼓或罢→月几望马匹亡→有孚挛如→翰音登于天' },
+  { n:'雷山小过', short:'小过', serial:'62', verdict:'小凶', keyword:'小事可过，大事宜谨。',
+    lines:[0,0,1,1,0,0],
+    guaci:'小过，亨，利贞，可小事，不可大事。象曰：山上有雷，小过；君子以行过乎恭，丧过乎哀，用过乎俭。',
+    jiedu:'山上有雷，小有过越。此卦主小事可灵活，大事需谨慎，宜在细节上稍作变通，但不可在原则问题上越界。',
+    story:'《论语》记载，孔子适度地礼让，在礼节上稍有过谦，在丧礼上稍有过哀，这是小过卦的正用：在细节上可以稍微过一点，以示诚意，但大是大非上不可逾越。小过卦告诉我们：灵活与变通，是生活智慧，但要分清楚哪些是可以变通的细节，哪些是不可逾越的底线。',
+    yao_key:'飞鸟以凶→过其祖遇其妣→弗过防之→无咎弗过遇之→密云不雨→弗遇过之' },
+  { n:'水火既济', short:'既济', serial:'63', verdict:'中吉', keyword:'功成已就，防止倒退。',
+    lines:[1,0,1,0,1,0],
+    guaci:'既济，亨小，利贞，初吉终乱。象曰：水在火上，既济；君子以思患而预防之。',
+    jiedu:'水火相交，已经完成。此卦主完成与圆满，但"初吉终乱"是其警示，成功之后须防范松弛，时刻思患预防。',
+    story:'秦始皇统一六国，功成既济，然而他和后代没有及时转变治国方式，从进取变为守成，反而更加严苛，最终二世而亡。既济卦警示：成功之后是最危险的时刻。功成名就之时，最容易松懈，最容易忘记危机。真正的智者，在达成目标后，立即开始思考下一个挑战，居安思危，永不停歇。',
+    yao_key:'曳其轮濡其尾→妇丧其茀→高宗伐鬼方→繻有衣袽→东邻杀牛→濡其首' },
+  { n:'火水未济', short:'未济', serial:'64', verdict:'平', keyword:'尚未完成，继续前行。',
+    lines:[0,1,0,1,0,1],
+    guaci:'未济，亨，小狐汔济，濡其尾，无攸利。象曰：火在水上，未济；君子以慎辨物居方。',
+    jiedu:'火在水上，相离不交，尚未完成之象。此卦为六十四卦之终，以未济收尾，寓意：没有真正的终点，生命之路永远在前进中。',
+    story:'《易经》以未济卦作为最后一卦，意味深长。六十四卦从乾坤始，以未济终，告诉我们：完成不是终点，而是新的起点；困境不是结束，而是转机的前夜。如同小狐狸渡河，差点就成功了，这次没过去，下次仍可再试。未济卦是整部《易经》的精神总结：生生不息，永远在路上，没有绝对的终结，也没有绝对的失败，一切皆有可能。',
+    yao_key:'濡其尾吝→曳其轮贞吉→未济征凶→贞吉悔亡震用伐鬼方→贞吉无悔君子之光→有孚于饮酒无咎' },
 ];
 
 // ── NAV ──
@@ -1088,23 +1459,6 @@ function castLocalGua(method) {
   const pool = candidates.length ? candidates : GUA;
   const g = pool[Math.floor(Math.random() * pool.length)];
   return normalizeLocalGua(g, method);
-}
-
-async function fetchGuaWithTimeout(method, timeoutMs=900) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch('http://127.0.0.1:8000/gua', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({method}),
-      signal: controller.signal
-    });
-    if (!res.ok) throw new Error('gua api failed');
-    return await res.json();
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 function renderTodayGua(g) {
@@ -1172,18 +1526,10 @@ function openTodayGua() {
   goScreen('gua-result');
 }
 
-async function quickSelfCast() {
+function quickSelfCast() {
   const method = 'random';
-  let g;
-  try {
-    g = await fetchGuaWithTimeout(method);
-    const saved = getSavedGua();
-    if (saved && g.serial === saved.serial) g = castLocalGua(method);
-    setDebug(`自检起卦：后端成功 ${g.name}`);
-  } catch(e) {
-    g = castLocalGua(method);
-    setDebug(`自检起卦：本地成功 ${g.name}`);
-  }
+  const g = castLocalGua(method);
+  setDebug(`自检起卦：本地成功 ${g.name}`);
   saveCurrentGua(g);
   renderGuaResult(g);
   showToast(`已起 ${g.name}`);
@@ -1239,19 +1585,10 @@ function startCasting() {
   function next() {
     if (step >= 6) {
       prog.textContent = '卦象已成';
-      setTimeout(async () => {
-        let g;
+      setTimeout(() => {
         const method = currentMethod === 'shake' ? 'random' : (currentMethod || 'random');
-        try {
-          g = await fetchGuaWithTimeout(method);
-          const saved = getSavedGua();
-          if (saved && g.serial === saved.serial) g = castLocalGua(method);
-          setDebug(`后端起卦成功：${g.name}`);
-        } catch(e) {
-          g = castLocalGua(method);
-          showToast('已用本地卦库起卦');
-          setDebug(`后端不可用，已本地起卦：${g.name}`);
-        }
+        const g = castLocalGua(method);
+        setDebug(`本地起卦：${g.name}`);
         saveCurrentGua(g);
         renderGuaResult(g);
         goScreen('gua-result');
@@ -1270,6 +1607,60 @@ function startCasting() {
 
 // ── WENS RESULT ──
 function showWensResult() {
+  const q = document.getElementById('wens-q') ? document.getElementById('wens-q').value.trim() : '';
+  if (!q) { showToast('请先输入所问之事'); return; }
+
+  // 随机取一卦，避免和当前今日卦重复
+  const saved = getSavedGua();
+  const pool = saved ? GUA.filter(x => x.serial !== saved.serial) : GUA;
+  const g = pool[Math.floor(Math.random() * pool.length)];
+
+  // 互卦：取第2-5爻（序号1-4，0-indexed）
+  const huLines = g.lines.slice(1, 5).concat(g.lines.slice(1, 3));
+  const huGua = GUA.find(x => x.lines.join('') === huLines.join('')) || g;
+
+  // 变卦：随机翻一爻
+  const bianLines = [...g.lines];
+  const flipIdx = Math.floor(Math.random() * 6);
+  bianLines[flipIdx] = bianLines[flipIdx] === 1 ? 0 : 1;
+  const bianGua = GUA.find(x => x.lines.join('') === bianLines.join('')) || g;
+
+  const tagClass = ['大吉','吉','中吉'].includes(g.verdict) ? 'tag-gold' :
+                   g.verdict.includes('凶') ? 'tag-red' : 'tag-gray';
+
+  document.querySelector('.rp-header .rp-title').textContent = '卦象结果';
+  document.querySelector('.rp-header .tag').className = `tag ${tagClass}`;
+  document.querySelector('.rp-header .tag').textContent = g.verdict;
+
+  const guaRowEl = document.querySelector('.rp-gua-row');
+  guaRowEl.innerHTML = `
+    ${guaLinesHTML(g.lines, 'sm')}
+    <div>
+      <div class="rp-gua-name">${g.n}</div>
+      <div class="rp-gua-sub">本卦 ${g.n} · 互卦 ${huGua.n} · 变卦 ${bianGua.n}</div>
+    </div>`;
+
+  const sections = document.querySelectorAll('.rp-section');
+  if (sections[0]) {
+    sections[0].querySelector('.rp-section-title').textContent = '本卦 / 互卦 / 变卦';
+    sections[0].querySelector('.rp-section-text').textContent =
+      `本卦${g.n}，互卦${huGua.n}，变卦${bianGua.n}。动爻为第${flipIdx + 1}爻。`;
+  }
+  if (sections[1]) {
+    sections[1].querySelector('.rp-section-title').textContent = '卦象解释';
+    sections[1].querySelector('.rp-section-text').innerHTML =
+      `${g.jiedu}变化方向显示：<span class="kw">${bianGua.keyword}</span>`;
+  }
+  if (sections[2]) {
+    sections[2].querySelector('.rp-section-title').textContent = '吉凶倾向';
+    sections[2].querySelector('.rp-section-text').textContent = g.verdict + '。' + g.keyword;
+  }
+  if (sections[3]) {
+    sections[3].querySelector('.rp-section-title').textContent = '行动建议';
+    sections[3].querySelector('.rp-section-text').innerHTML =
+      `<span class="kw">${g.short}</span>卦提示：${g.jiedu}`;
+  }
+
   const r = document.getElementById('wens-result');
   r.style.display = 'block';
   r.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1343,30 +1734,11 @@ function showGuaDetail(name) {
 }
 
 // ── BAZI ──
-async function calcBazi() {
+function calcBazi() {
   const dateVal = document.getElementById('bz-date').value || '1995-08-18';
   const timeVal = document.getElementById('bz-time').value || '09:30';
-  const [y, m, d] = dateVal.split('-').map(Number);
-  const h = parseInt(timeVal.split(':')[0]);
-
   showToast('正在推算…');
-  let result;
-  try {
-    const res = await fetch('http://127.0.0.1:8000/bazi', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({year: y, month: m, day: d, hour: h})
-    });
-    result = await res.json();
-  } catch(e) {
-    showToast('无法连接服务器，使用本地计算');
-    calcBaziLocal(dateVal, timeVal);
-    return;
-  }
-
-  renderBazi(result);
-  showToast('命盘推算完成');
-  document.getElementById('bz-result').scrollIntoView({ behavior: 'smooth' });
+  calcBaziLocal(dateVal, timeVal);
 }
 
 function renderBazi(result) {
@@ -1434,6 +1806,48 @@ function calcBaziLocal(dateVal, timeVal) {
   document.getElementById('bz-result').scrollIntoView({ behavior: 'smooth' });
 }
 
+// ── GUAJI ──
+const GUAJI_KEY = 'xuance.guaji';
+
+function saveToGuaji() {
+  const g = getSavedGua();
+  if (!g) { showToast('当前无卦象可存'); return; }
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(GUAJI_KEY) || '[]'); } catch(e) {}
+  const entry = { ...g, savedAt: new Date().toISOString() };
+  const today = new Date().toDateString();
+  const exists = list.some(x => x.serial === g.serial && new Date(x.savedAt).toDateString() === today);
+  if (exists) { showToast('今日此卦已存入卦记'); return; }
+  list.unshift(entry);
+  if (list.length > 50) list = list.slice(0, 50);
+  localStorage.setItem(GUAJI_KEY, JSON.stringify(list));
+  showToast('已存入卦记 ✓');
+}
+
+function openGuaji() {
+  const list = (() => { try { return JSON.parse(localStorage.getItem(GUAJI_KEY) || '[]'); } catch(e) { return []; } })();
+  const el = document.getElementById('guaji-list');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-light);font-size:13px;">暂无卦记<br>起卦后点击「存入卦记」即可</div>';
+  } else {
+    el.innerHTML = list.map(g => `
+      <div class="gd-item" style="cursor:default;">
+        ${guaLinesHTML(g.lines || [], 'sm')}
+        <div class="gd-info">
+          <div class="gd-name-row">
+            <span class="gd-name">${g.name || g.n}</span>
+            <span class="gd-verdict">${g.verdict}</span>
+          </div>
+          <div class="gd-desc" style="font-size:11px;color:var(--ink-light);">
+            ${new Date(g.savedAt).toLocaleDateString('zh-CN')}
+          </div>
+        </div>
+        <div class="gd-num">${g.serial}</div>
+      </div>`).join('');
+  }
+  goScreen('guaji');
+}
 // ── TOAST ──
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -1443,17 +1857,11 @@ function showToast(msg) {
 
 buildGuaList();
 
-(async function runSelfTest() {
+(function runSelfTest() {
   if (!location.search.includes('selftest=1')) return;
   const method = 'random';
-  let g;
-  try {
-    g = await fetchGuaWithTimeout(method);
-    setDebug(`自检：后端成功 ${g.name}`);
-  } catch(e) {
-    g = castLocalGua(method);
-    setDebug(`自检：后端失败，本地成功 ${g.name}`);
-  }
+  const g = castLocalGua(method);
+  setDebug(`自检：本地成功 ${g.name}`);
   saveCurrentGua(g);
   renderGuaResult(g);
 })();

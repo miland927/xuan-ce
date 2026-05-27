@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>易·占</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f2ece0;
+  --paper-dark: #e8e0cf;
+  --paper-darker: #d5cbb8;
+  --ink: #1c1408;
+  --ink-mid: #4a3c28;
+  --ink-light: #8a7a62;
+  --red: #b83228;
+  --red-light: #f5e8e6;
+  --gold: #a87800;
+  --gold-light: #c99a20;
+  --jade: #2d5a3d;
+  --jade-bg: #e8f0eb;
+  --nav-h: 62px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: #c8b89a;
+  font-family: 'Noto Serif SC', serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 28px 16px 40px;
+}
+
+/* ── PHONE SHELL ── */
+.phone {
+  width: 375px;
+  background: var(--paper);
+  border-radius: 50px;
+  box-shadow: 0 0 0 9px #1c1408, 0 0 0 11px #3a2e1c, 0 32px 72px rgba(0,0,0,0.5);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+.notch {
+  width: 110px; height: 30px;
+  background: #1c1408;
+  border-radius: 0 0 18px 18px;
+  margin: 0 auto;
+}
+.status {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 22px 2px;
+  font-size: 11px; color: var(--ink-mid);
+}
+
+/* ── SCREENS ── */
+.screen { display: none; flex-direction: column; }
+.screen.active { display: flex; }
+.scroll-body { overflow-y: auto; flex: 1; }
+.scroll-body::-webkit-scrollbar { display: none; }
+
+/* ── BOTTOM NAV ── */
+.bnav {
+  display: flex;
+  height: var(--nav-h);
+  background: #1c1408;
+  flex-shrink: 0;
+}
+.bnav-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 10px; color: rgba(255,255,255,0.45);
+  padding-bottom: 6px;
+  transition: color 0.2s;
+}
+.bnav-btn.on { color: var(--gold-light); }
+.bnav-icon { font-size: 18px; line-height: 1; }
+
+/* ── GRID-LINE PAPER BG ── */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(160,130,80,0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160,130,80,0.09) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ── SECTION CARD ── */
+.sec-card {
+  background: #ede5d3;
+  border-radius: 14px;
+  padding: 16px;
+  margin: 0 14px 12px;
+}
+.sec-card-title {
+  font-size: 14px; font-weight: 600; color: var(--ink-mid);
+  margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+}
+.sec-card-title .right-label { font-size: 11px; color: var(--ink-light); font-weight: 400; }
+
+/* ── TAG ── */
+.tag {
+  display: inline-block; padding: 2px 8px;
+  border-radius: 4px; font-size: 11px; font-weight: 600;
+}
+.tag-red { background: var(--red); color: #fff; }
+.tag-gold { background: var(--gold); color: #fff; }
+.tag-jade { background: var(--jade); color: #fff; }
+.tag-gray { background: var(--paper-darker); color: var(--ink-mid); }
+
+/* ── GUA LINES ── */
+.gua-wrap { display: flex; flex-direction: column-reverse; gap: 5px; }
+.gua-row { display: flex; gap: 5px; align-items: center; }
+.gy { height: 6px; border-radius: 3px; background: var(--gold-light); width: 56px; }
+.gn { height: 6px; border-radius: 3px; background: var(--gold-light); width: 22px; }
+.gua-wrap.sm .gy { width: 40px; height: 5px; }
+.gua-wrap.sm .gn { width: 15px; height: 5px; }
+.gua-wrap.lg .gy { width: 70px; height: 8px; }
+.gua-wrap.lg .gn { width: 28px; height: 8px; }
+.gua-wrap.dark .gy, .gua-wrap.dark .gn { background: var(--gold-light); }
+.gua-wrap.ink .gy, .gua-wrap.ink .gn { background: var(--ink); }
+
+/* ── DIVIDER ── */
+.divider {
+  display: flex; align-items: center; gap: 8px;
+  margin: 4px 14px 10px;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 0.5px; background: var(--paper-darker);
+}
+.divider span { font-size: 11px; color: var(--ink-light); white-space: nowrap; }
+
+/* ══════════════════════════════
+   SCREEN: 今日
+══════════════════════════════ */
+.home-hd {
+  padding: 8px 16px 14px;
+}
+.home-hd-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.home-hd-appname {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 34px; color: var(--ink); letter-spacing: 0.05em; line-height: 1;
+}
+.home-hd-date { font-size: 11px; color: var(--ink-light); }
+
+/* Today dark card */
+.today-gua-card {
+  margin: 0 14px 12px;
+  background: linear-gradient(140deg, #2a1c0a 0%, #1c1408 100%);
+  border-radius: 16px; padding: 18px 18px 16px;
+  cursor: pointer; transition: opacity 0.15s;
+  position: relative; overflow: hidden;
+}
+.today-gua-card::after {
+  content: '';
+  position: absolute; top: -40px; right: -20px;
+  width: 140px; height: 140px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(184,50,40,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.today-gua-card:active { opacity: 0.88; }
+.tgc-label { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.15em; margin-bottom: 14px; }
+.tgc-inner { display: flex; align-items: center; gap: 18px; }
+.tgc-info { flex: 1; }
+.tgc-name {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 30px; color: #fff; letter-spacing: 0.05em; line-height: 1.1;
+  margin-bottom: 6px;
+}
+.tgc-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+.tgc-yici { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+
+/* Yi Ji row */
+.yiji-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 14px 12px; }
+.yiji-card {
+  background: #ede5d3; border-radius: 12px; padding: 14px 14px 14px 16px;
+  position: relative; overflow: hidden;
+}
+.yiji-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; border-radius: 3px 0 0 3px;
+}
+.yiji-card.yi::before { background: var(--jade); }
+.yiji-card.ji::before { background: var(--red); }
+.yiji-head { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.yiji-card.yi .yiji-head { color: var(--jade); }
+.yiji-card.ji .yiji-head { color: var(--red); }
+.yiji-body { font-size: 12px; color: var(--ink-mid); line-height: 1.7; }
+
+/* Lucky direction */
+.lucky-dirs { display: flex; gap: 8px; }
+.lucky-dir {
+  flex: 1; background: var(--paper); border-radius: 10px;
+  padding: 10px 6px; text-align: center;
+}
+.lucky-dir-name { font-family: 'Ma Shan Zheng', cursive; font-size: 20px; color: var(--red); margin-bottom: 2px; }
+.lucky-dir-sub { font-size: 10px; color: var(--ink-light); }
+
+/* Minsuo */
+.minsuo-body { font-size: 13px; color: var(--ink-mid); line-height: 1.9; }
+.minsuo-toggle {
+  font-size: 12px; color: var(--red); cursor: pointer; background: none; border: none;
+  font-family: 'Noto Serif SC', serif;
+}
+.debug-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin: 0 14px 12px;
+}
+.debug-action-btn {
+  border: 1px solid var(--paper-darker); background: var(--paper);
+  color: var(--ink-mid); border-radius: 8px; padding: 10px 8px;
+  font-family: 'Noto Serif SC', serif; font-size: 12px; cursor: pointer;
+}
+.debug-action-btn:active { background: var(--paper-darker); }
+
+/* Bazi entry button */
+.bazi-entry {
+  margin: 0 14px 16px;
+  background: #ede5d3; border-radius: 12px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: background 0.15s;
+  border: none; width: calc(100% - 28px); font-family: 'Noto Serif SC', serif;
+  text-align: left;
+}
+.bazi-entry:active { background: var(--paper-darker); }
+.bazi-entry-icon {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #1c1408; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.bazi-entry-icon span {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 18px; color: var(--gold-light);
+}
+.bazi-entry-info { flex: 1; }
+.bazi-entry-name { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.bazi-entry-desc { font-size: 12px; color: var(--ink-light); }
+.bazi-entry-arrow { font-size: 16px; color: var(--ink-light); }
+
+/* ══════════════════════════════
+   SCREEN: 问事 (梅花问事)
+══════════════════════════════ */
+.wens-hd {
+  padding: 8px 18px 16px; text-align: center;
+}
+.wens-title {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 30px; letter-spacing: 0.2em; color: var(--ink);
+}
+.wens-subtitle { font-size: 12px; color: var(--ink-light); margin-top: 3px; letter-spacing: 0.05em; }
+
+.wens-form { padding: 0 14px; margin-bottom: 14px; }
+.wens-label { font-size: 11px; color: var(--ink-light); letter-spacing: 0.1em; margin-bottom: 6px; display: block; }
+.wens-textarea {
+  width: 100%; height: 88px;
+  background: #ede5d3; border: 0.5px solid var(--paper-darker);
+  border-radius: 10px; padding: 12px 14px;
+  font-family: 'Noto Serif SC', serif; font-size: 14px; color: var(--ink);
+  resize: none; outline: none; transition: border-color 0.2s;
+}
+.wens-textarea:focus { border-color: var(--red); }
+.wens-textarea::placeholder { color: var(--ink-light); }
+
+.qifa-select {
+  width: 100%; margin-top: 10px;
+  background: #ede5d3; border: 0.5px solid var(--paper-darker);
+  border-radius: 10px; padding: 10px 14px;
+  font-family: 'Noto Serif SC', serif; font-size: 14px; color: var(--ink);
+  outline: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7a62' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+
+/* Orb */
+.orb-area { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 14px 0; }
+.orb {
+  width: 110px; height: 110px; border-radius: 50%;
+  background: radial-gradient(circle at 36% 36%, #3a2a10, #1c1408);
+  border: 1.5px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(200,150,30,0.25);
+  transition: transform 0.1s;
+}
+.orb:hover { transform: scale(1.04); }
+.orb:active { transform: scale(0.95); }
+.orb-char { font-family: 'Ma Shan Zheng', cursive; font-size: 44px; color: var(--gold-light); line-height: 1; user-select: none; }
+.orb-ring {
+  position: absolute; inset: -7px; border-radius: 50%;
+  border: 1px solid rgba(200,154,32,0.2);
+  animation: rpulse 3s ease-in-out infinite;
+}
+@keyframes rpulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.06)} }
+.orb-hint { font-size: 12px; color: var(--ink-light); letter-spacing: 0.08em; }
+
+/* Result panel */
+.result-panel {
+  margin: 0 14px 14px;
+  background: #ede5d3; border-radius: 14px; overflow: hidden;
+}
+.rp-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; background: #e0d4be;
+}
+.rp-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+.rp-body { padding: 14px 16px; }
+.rp-gua-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.rp-gua-name {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 20px; color: var(--ink);
+}
+.rp-gua-sub { font-size: 11px; color: var(--ink-light); margin-top: 2px; }
+
+.rp-section { margin-bottom: 12px; }
+.rp-section-title {
+  font-size: 12px; font-weight: 600; color: var(--ink);
+  margin-bottom: 5px; padding-left: 8px;
+  border-left: 2px solid var(--red);
+}
+.rp-section-text { font-size: 13px; color: var(--ink-mid); line-height: 1.85; }
+.rp-section-text .kw { color: var(--red); font-weight: 600; }
+
+/* ══════════════════════════════
+   SCREEN: 起卦
+══════════════════════════════ */
+.qigua-hd { padding: 8px 18px 16px; text-align: center; }
+.qigua-title { font-family: 'Ma Shan Zheng', cursive; font-size: 32px; letter-spacing: 0.2em; color: var(--ink); }
+.qigua-sub { font-size: 12px; color: var(--ink-light); margin-top: 3px; }
+
+.method-row { display: flex; gap: 8px; padding: 0 14px; margin-bottom: 20px; }
+.method-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 12px 6px; background: #ede5d3;
+  border: 1px solid var(--paper-darker); border-radius: 12px;
+  cursor: pointer; font-family: 'Noto Serif SC', serif;
+  font-size: 11px; color: var(--ink-mid);
+  transition: all 0.2s;
+}
+.method-btn.sel { background: var(--ink); border-color: var(--ink); color: #fff; }
+.method-ico { font-size: 20px; }
+
+.qigua-orb-area { display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 8px 0 24px; }
+.qigua-orb {
+  width: 128px; height: 128px; border-radius: 50%;
+  background: radial-gradient(circle at 36% 36%, #3a2a10, #1c1408);
+  border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(200,150,30,0.25);
+  transition: transform 0.1s;
+}
+.qigua-orb:hover { transform: scale(1.04); }
+.qigua-orb:active { transform: scale(0.94); }
+.qigua-orb-char { font-family: 'Ma Shan Zheng', cursive; font-size: 52px; color: var(--gold-light); line-height: 1; user-select: none; }
+.qigua-orb-ring { position: absolute; inset: -9px; border-radius: 50%; border: 1px solid rgba(200,154,32,0.18); animation: rpulse 3s ease-in-out infinite; }
+.qigua-orb-ring2 { position: absolute; inset: -18px; border-radius: 50%; border: 1px solid rgba(200,154,32,0.08); animation: rpulse 3s ease-in-out infinite 0.6s; }
+
+/* Casting screen */
+#casting {
+  background: #1c1408; min-height: 780px;
+  align-items: center; justify-content: center;
+}
+.cast-title { font-family: 'Ma Shan Zheng', cursive; font-size: 26px; color: var(--gold-light); letter-spacing: 0.3em; margin-bottom: 40px; opacity: 0.8; }
+.coins-row { display: flex; gap: 18px; margin-bottom: 44px; }
+.coin {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 34%, var(--gold-light), var(--gold));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Ma Shan Zheng', cursive; font-size: 18px; color: #1c1408;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+  animation: cflip 1.2s ease-in-out infinite;
+}
+.coin:nth-child(2) { animation-delay: 0.2s; }
+.coin:nth-child(3) { animation-delay: 0.4s; }
+@keyframes cflip { 0%,100%{transform:rotateY(0)} 50%{transform:rotateY(180deg)} }
+
+.cast-lines { display: flex; flex-direction: column-reverse; gap: 12px; margin-bottom: 40px; }
+.cast-line {
+  display: flex; justify-content: center; gap: 8px;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.45s, transform 0.45s;
+}
+.cast-line.show { opacity: 1; transform: translateY(0); }
+.cseg { height: 7px; border-radius: 3px; background: var(--gold-light); }
+.cseg.y { width: 80px; }
+.cseg.n { width: 32px; }
+
+.cast-prog { font-size: 12px; color: rgba(255,255,255,0.3); letter-spacing: 0.15em; text-align: center; }
+
+/* Gua result */
+#gua-result { background: var(--paper); }
+.gr-back {
+  display: flex; align-items: center; gap: 6px; padding: 8px 18px;
+  font-size: 13px; color: var(--ink-mid); cursor: pointer;
+  background: none; border: none; font-family: 'Noto Serif SC', serif;
+}
+.gr-back:active { opacity: 0.6; }
+.gr-hero { text-align: center; padding: 6px 20px 20px; }
+.gr-hero-name { font-family: 'Ma Shan Zheng', cursive; font-size: 38px; color: var(--ink); letter-spacing: 0.08em; margin: 10px 0 3px; }
+.gr-hero-serial { font-size: 11px; color: var(--ink-light); letter-spacing: 0.08em; margin-bottom: 10px; }
+.gr-verdict { display: inline-block; padding: 4px 16px; background: var(--red); color: #fff; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; border-radius: 3px; }
+
+.gr-section {
+  margin: 0 14px 10px; background: #ede5d3; border-radius: 12px;
+  padding: 14px 16px; position: relative; overflow: hidden;
+}
+.gr-section::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--red); border-radius: 3px 0 0 3px;
+}
+.gr-sec-title { font-size: 11px; color: var(--ink-light); letter-spacing: 0.12em; margin-bottom: 7px; }
+.gr-sec-text { font-size: 13px; color: var(--ink); line-height: 1.9; }
+.gr-sec-text .kw { color: var(--red); font-weight: 600; }
+.gr-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.gr-tag { font-size: 11px; padding: 3px 10px; border-radius: 4px; }
+.gr-tag.good { background: var(--jade-bg); color: var(--jade); }
+.gr-tag.bad { background: var(--red-light); color: var(--red); }
+
+.gr-save {
+  width: calc(100% - 28px); margin: 4px 14px 16px; padding: 13px;
+  background: var(--ink); color: var(--paper);
+  border: none; border-radius: 12px;
+  font-family: 'Ma Shan Zheng', cursive; font-size: 16px; letter-spacing: 0.2em;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.gr-save:active { opacity: 0.8; }
+
+/* ══════════════════════════════
+   SCREEN: 卦典
+══════════════════════════════ */
+.guadian-hd { padding: 8px 18px 12px; text-align: center; }
+.guadian-title { font-family: 'Ma Shan Zheng', cursive; font-size: 28px; letter-spacing: 0.18em; color: var(--ink); }
+.guadian-sub { font-size: 11px; color: var(--ink-light); margin-top: 2px; }
+
+.gd-search {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 14px 12px; background: #ede5d3;
+  border: 0.5px solid var(--paper-darker); border-radius: 10px; padding: 9px 14px;
+}
+.gd-search input { flex:1; background:none; border:none; outline:none; font-family:'Noto Serif SC',serif; font-size:13px; color:var(--ink); }
+.gd-search input::placeholder { color:var(--ink-light); }
+
+.gd-list { padding: 0 14px 16px; }
+.gd-item {
+  display: flex; align-items: center; gap: 12px;
+  background: #ede5d3; border-radius: 12px; padding: 12px 14px;
+  margin-bottom: 8px; cursor: pointer; transition: background 0.15s;
+}
+.gd-item:active { background: var(--paper-darker); }
+.gd-num { font-size: 18px; color: var(--paper-darker); font-family: 'Ma Shan Zheng', cursive; font-weight: 700; min-width: 26px; text-align: right; }
+.gd-info { flex: 1; }
+.gd-name-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.gd-name { font-family: 'Ma Shan Zheng', cursive; font-size: 20px; color: var(--ink); }
+.gd-verdict { font-size: 12px; color: var(--ink-light); }
+.gd-desc { font-size: 12px; color: var(--ink-light); }
+
+/* Gua detail page */
+#gua-detail { background: var(--paper); }
+.gd-detail-back {
+  display: flex; align-items: center; gap: 6px; padding: 8px 18px;
+  font-size: 13px; color: var(--ink-mid); cursor: pointer;
+  background: none; border: none; font-family: 'Noto Serif SC', serif;
+}
+.gd-detail-hero { text-align: center; padding: 6px 20px 20px; }
+.gd-detail-name { font-family: 'Ma Shan Zheng', cursive; font-size: 36px; color: var(--ink); letter-spacing: 0.08em; margin: 10px 0 3px; }
+.gd-detail-serial { font-size: 11px; color: var(--ink-light); letter-spacing: 0.08em; margin-bottom: 10px; }
+
+.gd-detail-section {
+  margin: 0 14px 10px; background: #ede5d3; border-radius: 12px; padding: 14px 16px;
+  position: relative; overflow: hidden;
+}
+.gd-detail-section::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--gold); border-radius: 3px 0 0 3px;
+}
+.gd-ds-title { font-size: 11px; color: var(--ink-light); letter-spacing: 0.12em; margin-bottom: 7px; }
+.gd-ds-text { font-size: 13px; color: var(--ink); line-height: 1.95; }
+
+/* ══════════════════════════════
+   SCREEN: 八字
+══════════════════════════════ */
+#bazi { background: var(--paper); }
+.bz-hd { padding: 8px 18px 14px; text-align: center; }
+.bz-title { font-family: 'Ma Shan Zheng', cursive; font-size: 28px; letter-spacing: 0.15em; color: var(--ink); }
+.bz-sub { font-size: 12px; color: var(--ink-light); margin-top: 3px; }
+
+.bz-form { padding: 0 14px; }
+.bz-form-card { background: #ede5d3; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.bz-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.bz-row:last-child { margin-bottom: 0; }
+.bz-field { flex: 1; }
+.bz-field label { display: block; font-size: 10px; color: var(--ink-light); letter-spacing: 0.08em; margin-bottom: 5px; }
+.bz-input {
+  width: 100%; background: var(--paper); border: 0.5px solid var(--paper-darker);
+  border-radius: 8px; padding: 9px 12px;
+  font-family: 'Noto Serif SC', serif; font-size: 14px; color: var(--ink);
+  outline: none; transition: border-color 0.2s; appearance: none;
+}
+.bz-input:focus { border-color: var(--red); }
+
+.bz-calc-btn {
+  width: calc(100% - 28px); margin: 0 14px 16px; padding: 13px;
+  background: var(--red); color: #fff; border: none; border-radius: 12px;
+  font-family: 'Ma Shan Zheng', cursive; font-size: 18px; letter-spacing: 0.25em;
+  cursor: pointer; transition: background 0.2s;
+}
+.bz-calc-btn:active { background: #963020; }
+
+/* Pillars */
+.bz-pillars { margin: 0 14px 12px; border-radius: 12px; overflow: hidden; }
+.bz-ph { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--ink); }
+.bz-ph-cell { padding: 8px; text-align: center; font-size: 10px; color: rgba(255,255,255,0.5); border-right: 0.5px solid rgba(255,255,255,0.08); }
+.bz-ph-cell:last-child { border-right: none; }
+.bz-pd { display: grid; grid-template-columns: repeat(4, 1fr); background: #ede5d3; }
+.bz-pd-cell { padding: 14px 8px; text-align: center; border-right: 0.5px solid var(--paper-darker); border-top: 0.5px solid var(--paper-darker); }
+.bz-pd-cell:last-child { border-right: none; }
+.bz-char { font-family: 'Ma Shan Zheng', cursive; font-size: 26px; color: var(--ink); display: block; line-height: 1.15; }
+.bz-sub-char { font-size: 9px; color: var(--ink-light); }
+
+/* Wuxing bars */
+.bz-wx { margin: 0 14px 12px; background: #ede5d3; border-radius: 12px; padding: 14px 16px; }
+.bz-wx-title { font-size: 12px; color: var(--ink-light); letter-spacing: 0.1em; margin-bottom: 10px; }
+.bz-wx-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bz-wx-name { width: 18px; font-family: 'Ma Shan Zheng', cursive; font-size: 15px; color: var(--ink-mid); text-align: center; }
+.bz-wx-track { flex: 1; height: 7px; background: var(--paper-darker); border-radius: 4px; overflow: hidden; }
+.bz-wx-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease-out; }
+.bz-wx-pct { font-size: 10px; color: var(--ink-light); min-width: 36px; text-align: right; }
+
+.bz-text-section { margin: 0 14px 16px; background: #ede5d3; border-radius: 12px; padding: 14px 16px; position: relative; overflow: hidden; }
+.bz-text-section::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--gold); border-radius: 3px 0 0 3px; }
+.bz-ts-title { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.bz-ts-text { font-size: 13px; color: var(--ink-mid); line-height: 1.9; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+  background: rgba(28,20,8,0.88); color: var(--paper);
+  padding: 9px 22px; border-radius: 100px;
+  font-size: 13px; letter-spacing: 0.05em;
+  z-index: 999; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+.debug-bar {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+  width: min(345px, calc(100vw - 24px));
+  background: rgba(28,20,8,0.92); color: var(--paper);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px; padding: 8px 10px;
+  font-size: 11px; line-height: 1.5; z-index: 998;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+@media (max-width: 400px) {
+  .phone { width: 100vw; border-radius: 0; box-shadow: none; }
+  body { padding: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- ═══ 今日 ═══ -->
+  <div class="screen active grid-bg" id="today">
+    <div class="status"><span>9:41</span><span style="font-family:monospace;font-size:10px">■■■ 5G ●</span></div>
+    <div class="scroll-body">
+      <div class="home-hd">
+        <div class="home-hd-top">
+          <div class="home-hd-appname">易 · 占</div>
+          <div class="home-hd-date" id="hd-date">5月26日（Demo）</div>
+        </div>
+        <div style="font-size:11px;color:var(--ink-light);margin-top:3px;" id="hd-lunar">今日黄历</div>
+      </div>
+
+      <!-- 今日卦象 -->
+      <div class="today-gua-card" onclick="openTodayGua()">
+        <div class="tgc-label">▪ 今日卦象</div>
+        <div class="tgc-inner">
+          <div class="gua-wrap dark">
+            <div class="gua-row"><div class="gy"></div></div>
+            <div class="gua-row"><div class="gn"></div><div class="gn"></div></div>
+            <div class="gua-row"><div class="gy"></div></div>
+            <div class="gua-row"><div class="gy"></div></div>
+            <div class="gua-row"><div class="gn"></div><div class="gn"></div></div>
+            <div class="gua-row"><div class="gy"></div></div>
+          </div>
+          <div class="tgc-info">
+            <div class="tgc-sub">第三十七卦</div>
+            <div class="tgc-name">风火家人</div>
+            <span class="tag tag-red">小吉</span>
+            <div class="tgc-yici" style="margin-top:8px;">守正有序，利沟通关系。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 宜忌 -->
+      <div class="yiji-row">
+        <div class="yiji-card yi">
+          <div class="yiji-head">宜</div>
+          <div class="yiji-body">沟通、整理计划、拜访、学习</div>
+        </div>
+        <div class="yiji-card ji">
+          <div class="yiji-head">忌</div>
+          <div class="yiji-body">冲动消费、争执、仓促签约</div>
+        </div>
+      </div>
+
+      <!-- 幸运方位 -->
+      <div class="sec-card">
+        <div class="sec-card-title">幸运方位<span class="right-label">今日</span></div>
+        <div class="lucky-dirs">
+          <div class="lucky-dir">
+            <div class="lucky-dir-name">东北</div>
+            <div class="lucky-dir-sub">财神</div>
+          </div>
+          <div class="lucky-dir">
+            <div class="lucky-dir-name">东南</div>
+            <div class="lucky-dir-sub">喜神</div>
+          </div>
+          <div class="lucky-dir">
+            <div class="lucky-dir-name">西南</div>
+            <div class="lucky-dir-sub">福神</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 民俗说明 -->
+      <div class="sec-card">
+        <div class="sec-card-title">民俗说明<button class="minsuo-toggle" id="minsuo-btn" onclick="toggleMinsuo(event)">展开</button></div>
+        <div class="minsuo-body" id="minsuo-short">今日以稳为先，适合处理可控事务。民俗内容仅作日常参考。</div>
+        <div class="minsuo-body" id="minsuo-full" style="display:none;">
+          今日以稳为先，适合处理可控事务。民俗内容仅作日常参考。<br><br>
+          风火家人之日，家宅运势偏旺，宜整顿内务、沟通家人情感。出行以近为佳，勿作远行，午时前后诸事顺遂，申时后宜收敛，避免决策过急。
+        </div>
+      </div>
+
+      <div class="debug-actions">
+        <button class="debug-action-btn" onclick="quickSelfCast()">自检起卦</button>
+        <button class="debug-action-btn" onclick="clearTodayGua()">清除今日卦</button>
+      </div>
+
+      <!-- 八字入口 -->
+      <button class="bazi-entry" onclick="goScreen('bazi')">
+        <div class="bazi-entry-icon"><span>命</span></div>
+        <div class="bazi-entry-info">
+          <div class="bazi-entry-name">八字命盘</div>
+          <div class="bazi-entry-desc">输入生辰，推算四柱与五行</div>
+        </div>
+        <span class="bazi-entry-arrow">›</span>
+      </button>
+
+      <div style="height:8px;"></div>
+    </div>
+    <div class="bnav">
+      <button class="bnav-btn on" onclick="goScreen('today')"><span class="bnav-icon">☯</span>今日</button>
+      <button class="bnav-btn" onclick="goScreen('qigua')"><span class="bnav-icon">⚡</span>起卦</button>
+      <button class="bnav-btn" onclick="goScreen('wenshis')"><span class="bnav-icon">✦</span>问事</button>
+      <button class="bnav-btn" onclick="goScreen('guadian')"><span class="bnav-icon">☷</span>卦典</button>
+    </div>
+  </div>
+
+  <!-- ═══ 起卦 ═══ -->
+  <div class="screen grid-bg" id="qigua">
+    <div class="status"><span>9:41</span><span style="font-family:monospace;font-size:10px">■■■ 5G ●</span></div>
+    <div class="scroll-body">
+      <div class="qigua-hd">
+        <div class="qigua-title">起 卦</div>
+        <div class="qigua-sub">心诚则灵，专注所问之事</div>
+      </div>
+
+      <div class="wens-form" style="margin-bottom:14px;">
+        <label class="wens-label">所问之事</label>
+        <textarea class="wens-textarea" placeholder="请写下您所问之事，心中默想…&#10;例：此次求职能否顺利？"></textarea>
+      </div>
+
+      <div class="method-row">
+        <button class="method-btn sel" id="m-shake" onclick="selMethod('shake')">
+          <span class="method-ico">📱</span>摇卦
+        </button>
+        <button class="method-btn" id="m-coin" onclick="selMethod('coin')">
+          <span class="method-ico">🪙</span>铜钱法
+        </button>
+        <button class="method-btn" id="m-num" onclick="selMethod('num')">
+          <span class="method-ico">🔢</span>数字起卦
+        </button>
+      </div>
+
+      <div class="qigua-orb-area">
+        <div class="qigua-orb" onclick="startCasting()">
+          <div class="qigua-orb-ring"></div>
+          <div class="qigua-orb-ring2"></div>
+          <span class="qigua-orb-char">易</span>
+        </div>
+        <div class="orb-hint">点击 · 或摇动手机 · 起卦</div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="bnav">
+      <button class="bnav-btn" onclick="goScreen('today')"><span class="bnav-icon">☯</span>今日</button>
+      <button class="bnav-btn on" onclick="goScreen('qigua')"><span class="bnav-icon">⚡</span>起卦</button>
+      <button class="bnav-btn" onclick="goScreen('wenshis')"><span class="bnav-icon">✦</span>问事</button>
+      <button class="bnav-btn" onclick="goScreen('guadian')"><span class="bnav-icon">☷</span>卦典</button>
+    </div>
+  </div>
+
+  <!-- ═══ 摇卦动画 ═══ -->
+  <div class="screen" id="casting" style="background:#1c1408;min-height:780px;align-items:center;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div class="cast-title">求 签 中…</div>
+      <div class="coins-row">
+        <div class="coin">乾</div>
+        <div class="coin">坤</div>
+        <div class="coin">震</div>
+      </div>
+      <div class="cast-lines" id="cast-lines">
+        <div class="cast-line" id="cl1"><div class="cseg y"></div></div>
+        <div class="cast-line" id="cl2"><div class="cseg n"></div><div class="cseg n"></div></div>
+        <div class="cast-line" id="cl3"><div class="cseg y"></div></div>
+        <div class="cast-line" id="cl4"><div class="cseg y"></div></div>
+        <div class="cast-line" id="cl5"><div class="cseg n"></div><div class="cseg n"></div></div>
+        <div class="cast-line" id="cl6"><div class="cseg y"></div></div>
+      </div>
+      <div class="cast-prog" id="cast-prog">正在推演…</div>
+    </div>
+  </div>
+
+  <!-- ═══ 卦象结果 ═══ -->
+  <div class="screen grid-bg" id="gua-result">
+    <div class="status"><span>9:41</span><span style="font-family:monospace;font-size:10px">■■■ 5G ●</span></div>
+    <div class="scroll-body">
+      <button class="gr-back" onclick="history.length>1 ? goScreen('qigua') : goScreen('today')">← 返回</button>
+      <div class="gr-hero">
+        <div class="gua-wrap ink" style="align-items:center;">
+          <div class="gua-row"><div class="gy" style="width:72px;height:8px;background:var(--ink);border-radius:4px;"></div></div>
+          <div class="gua-row">
+            <div class="gn" style="width:28px;height:8px;background:var(--ink);border-radius:4px;"></div>
+            <div class="gn" style="width:28px;height:8px;background:var(--ink);border-radius:4px;"></div>
+          </div>
+          <div class="gua-row"><div class="gy" style="width:72px;height:8px;background:var(--ink);border-radius:4px;"></div></div>
+          <div class="gua-row"><div class="gy" style="width:72px;height:8px;background:var(--ink);border-radius:4px;"></div></div>
+          <div class="gua-row">
+            <div class="gn" style="width:28px;height:8px;background:var(--ink);border-radius:4px;"></div>
+            <div class="gn" style="width:28px;height:8px;background:var(--ink);border-radius:4px;"></div>
+          </div>
+          <div class="gua-row"><div class="gy" style="width:72px;height:8px;background:var(--ink);border-radius:4px;"></div></div>
+        </div>
+        <div class="gr-hero-name">风火家人</div>
+        <div class="gr-hero-serial">第三十七卦 · 上巽下离</div>
+        <span class="gr-verdict">小 吉</span>
+      </div>
+
+      <div class="gr-section">
+        <div class="gr-sec-title">▪ 卦 辞</div>
+        <div class="gr-sec-text">家人，利女贞。象曰：风自火出，家人；君子以言有物而行有恒。</div>
+      </div>
+      <div class="gr-section">
+        <div class="gr-sec-title">▪ 今日解读</div>
+        <div class="gr-sec-text">风自火出，<span class="kw">家道正则万事兴</span>。此卦主内，宜整理关系与秩序，亲近之人有话宜坦诚，切勿隐瞒积压。</div>
+        <div class="gr-tags">
+          <span class="gr-tag good">✓ 沟通</span>
+          <span class="gr-tag good">✓ 整理</span>
+          <span class="gr-tag good">✓ 拜访</span>
+          <span class="gr-tag bad">✗ 争执</span>
+          <span class="gr-tag bad">✗ 签约</span>
+        </div>
+      </div>
+      <div class="gr-section">
+        <div class="gr-sec-title">▪ 动 爻</div>
+        <div class="gr-sec-text">九五爻动：<span class="kw">王假有家，勿恤，吉</span>。以诚感人，家业可兴，勿忧虑，顺势而为则吉。</div>
+      </div>
+      <div class="gr-section">
+        <div class="gr-sec-title">▪ 各方位运势</div>
+        <div class="gr-sec-text">
+          财运：<span class="kw">平稳</span>，守成为主，忌冒进。<br>
+          事业：<span class="kw">小吉</span>，团队协作为要，独断易生摩擦。<br>
+          感情：<span class="kw">吉</span>，坦诚则和，此时宜增进感情。
+        </div>
+      </div>
+      <button class="gr-save" onclick="showToast('已存入卦记')">存 入 卦 记</button>
+    </div>
+  </div>
+
+  <!-- ═══ 问事 (梅花问事) ═══ -->
+  <div class="screen grid-bg" id="wenshis">
+    <div class="status"><span>9:41</span><span style="font-family:monospace;font-size:10px">■■■ 5G ●</span></div>
+    <div class="scroll-body">
+      <div class="wens-hd">
+        <div class="wens-title">梅 花 问 事</div>
+        <div class="wens-subtitle">一事一问，结果给出倾向与行动建议</div>
+      </div>
+
+      <div class="wens-form">
+        <label class="wens-label">所问之事</label>
+        <textarea class="wens-textarea" id="wens-q" placeholder="例如：这个人会不会联系我？"></textarea>
+        <select class="qifa-select" style="margin-top:10px;">
+          <option>时间起卦</option>
+          <option>数字起卦</option>
+          <option>梅花易数</option>
+        </select>
+      </div>
+
+      <div class="orb-area">
+        <div class="orb" onclick="showWensResult()">
+          <div class="orb-ring"></div>
+          <span class="orb-char">易</span>
+        </div>
+        <div class="orb-hint">点击 · 专注所问之事 · 起卦</div>
+      </div>
+
+      <div class="result-panel" id="wens-result" style="display:none;">
+        <div class="rp-header">
+          <span class="rp-title">卦象结果</span>
+          <span class="tag tag-red">吉</span>
+        </div>
+        <div class="rp-body">
+          <div class="rp-gua-row">
+            <div class="gua-wrap sm" style="flex-shrink:0;">
+              <div class="gua-row"><div class="gn"></div><div class="gn"></div></div>
+              <div class="gua-row"><div class="gy"></div></div>
+              <div class="gua-row"><div class="gn"></div><div class="gn"></div></div>
+              <div class="gua-row"><div class="gn"></div><div class="gn"></div></div>
+              <div class="gua-row"><div class="gy"></div></div>
+              <div class="gua-row"><div class="gn"></div><div class="gn"></div></div>
+            </div>
+            <div>
+              <div class="rp-gua-name">水地比</div>
+              <div class="rp-gua-sub">本卦 水地比 · 互卦 水雷屯 · 变卦 水地比</div>
+            </div>
+          </div>
+
+          <div class="rp-section">
+            <div class="rp-section-title">本卦 / 互卦 / 变卦</div>
+            <div class="rp-section-text">本卦水地比，互卦水雷屯，变卦水地比。动爻为第2爻。</div>
+          </div>
+          <div class="rp-section">
+            <div class="rp-section-title">卦象解释</div>
+            <div class="rp-section-text">亲近相合，利于结盟。初始艰难，宜慢慢推进。变化方向显示：<span class="kw">亲近相合，利于结盟</span>。</div>
+          </div>
+          <div class="rp-section">
+            <div class="rp-section-title">吉凶倾向</div>
+            <div class="rp-section-text">偏向可成，但节奏不会太快。</div>
+          </div>
+          <div class="rp-section">
+            <div class="rp-section-title">行动建议</div>
+            <div class="rp-section-text"><span class="kw">主动示好</span>，态度真诚，不宜催促。等待时机，水到渠成。</div>
+          </div>
+        </div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="bnav">
+      <button class="bnav-btn" onclick="goScreen('today')"><span class="bnav-icon">☯</span>今日</button>
+      <button class="bnav-btn" onclick="goScreen('qigua')"><span class="bnav-icon">⚡</span>起卦</button>
+      <button class="bnav-btn on" onclick="goScreen('wenshis')"><span class="bnav-icon">✦</span>问事</button>
+      <button class="bnav-btn" onclick="goScreen('guadian')"><span class="bnav-icon">☷</span>卦典</button>
+    </div>
+  </div>
+
+  <!-- ═══ 卦典列表 ═══ -->
+  <div class="screen grid-bg" id="guadian">
+    <div class="status"><span>9:41</span><span style="font-family:monospace;font-size:10px">■■■ 5G ●</span></div>
+    <div class="scroll-body">
+      <div class="guadian-hd">
+        <div class="guadian-title">六 十 四 卦 典</div>
+        <div class="guadian-sub">快速查阅卦名、吉凶与关键词</div>
+      </div>
+      <div class="gd-search">
+        <span style="font-size:14px;color:var(--ink-light);">🔍</span>
+        <input type="text" placeholder="搜索卦名或关键词…" id="gd-search-input" oninput="filterGua()">
+      </div>
+      <div class="gd-list" id="gd-list"></div>
+    </div>
+    <div class="bnav">
+      <button class="bnav-btn" onclick="goScreen('today')"><span class="bnav-icon">☯</span>今日</button>
+      <button class="bnav-btn" onclick="goScreen('qigua')"><span class="bnav-icon">⚡</span>起卦</button>
+      <button class="bnav-btn" onclick="goScreen('wenshis')"><span class="bnav-icon">✦</span>问事</button>
+      <button class="bnav-btn on" onclick="goScreen('guadian')"><span class="bnav-icon">☷</span>卦典</button>
+    </div>
+  </div>
+
+  <!-- ═══ 卦详情 ═══ -->
+  <div class="screen grid-bg" id="gua-detail">
+    <div class="status"><span>9:41</span><span style="font-family:monospace;font-size:10px">■■■ 5G ●</span></div>
+    <div class="scroll-body">
+      <button class="gd-detail-back" onclick="goScreen('guadian')">← 卦典</button>
+      <div class="gd-detail-hero" id="detail-hero"></div>
+      <div id="detail-body"></div>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ═══ 八字命盘 ═══ -->
+  <div class="screen grid-bg" id="bazi">
+    <div class="status"><span>9:41</span><span style="font-family:monospace;font-size:10px">■■■ 5G ●</span></div>
+    <div class="scroll-body">
+      <button class="gd-detail-back" onclick="goScreen('today')" style="margin-bottom:4px;">← 返回</button>
+      <div class="bz-hd">
+        <div class="bz-title">八 字 命 盘</div>
+        <div class="bz-sub">输入出生信息，查看四柱、五行与喜忌倾向</div>
+      </div>
+      <div class="bz-form">
+        <div class="bz-form-card">
+          <div class="bz-row">
+            <div class="bz-field">
+              <label>出生日期</label>
+              <input class="bz-input" type="date" id="bz-date" value="1995-08-18">
+            </div>
+            <div class="bz-field">
+              <label>出生时间</label>
+              <input class="bz-input" type="time" id="bz-time" value="09:30">
+            </div>
+          </div>
+          <div class="bz-row">
+            <div class="bz-field">
+              <label>出生地</label>
+              <input class="bz-input" type="text" id="bz-city" placeholder="杭州" value="杭州">
+            </div>
+            <div class="bz-field">
+              <label>性别</label>
+              <select class="bz-input" id="bz-sex">
+                <option>不填</option><option>男</option><option>女</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="bz-calc-btn" onclick="calcBazi()">推 算 命 盘</button>
+
+      <div id="bz-result" style="display:none;">
+        <div class="bz-pillars">
+          <div class="bz-ph">
+            <div class="bz-ph-cell">年柱</div>
+            <div class="bz-ph-cell">月柱</div>
+            <div class="bz-ph-cell">日柱</div>
+            <div class="bz-ph-cell">时柱</div>
+          </div>
+          <div class="bz-pd" id="bz-tian-row"></div>
+          <div class="bz-pd" id="bz-di-row"></div>
+        </div>
+
+        <div class="bz-wx" style="margin-top:12px;">
+          <div class="bz-wx-title">▪ 个人五行判断</div>
+          <div id="bz-wx-bars"></div>
+        </div>
+
+        <div class="bz-text-section">
+          <div class="bz-ts-title">八字四柱</div>
+          <div class="bz-ts-text" id="bz-zhu-text"></div>
+        </div>
+        <div class="bz-text-section">
+          <div class="bz-ts-title">五行标签</div>
+          <div class="bz-ts-text" id="bz-wx-text"></div>
+        </div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<div class="toast" id="toast"></div>
+<div class="debug-bar" id="debug-bar">调试：页面已加载</div>
+
+<script>
+// ── DATA ──
+const TG = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const DZ = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const SC = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const WX_COLORS = { 木:'#2d5a3d', 火:'#b83228', 土:'#a87800', 金:'#7a6e5a', 水:'#2a5080' };
+
+const GUA = [
+  { n:'乾为天', short:'乾', serial:'01', verdict:'大吉', keyword:'刚健进取，宜主动开局。',
+    lines:[1,1,1,1,1,1],
+    guaci:'乾，元亨利贞。象曰：天行健，君子以自强不息。',
+    jiedu:'纯阳刚健，万象之始。此卦主进取，宜大胆开创，守正而行，万事可成。',
+    story:'相传周文王被囚羑里，演六十四卦时首列乾卦。乾者，天也。古人观天象，见日月星辰运行不息，感悟"天行健，君子以自强不息"，将此精神融入乾卦之中。历代君王即位，必问乾卦，取其刚健之意，自勉奋进。乾卦六爻皆阳，象征极致的阳刚之气，但《易》亦警示：亢龙有悔，物极必反，强盛之时更需守正自持。',
+    yao_key:'潜龙勿用→见龙在田→终日乾乾→或跃在渊→飞龙在天→亢龙有悔' },
+  { n:'坤为地', short:'坤', serial:'02', verdict:'中吉', keyword:'厚德载物，宜承接与积累。',
+    lines:[0,0,0,0,0,0],
+    guaci:'坤，元亨，利牝马之贞。象曰：地势坤，君子以厚德载物。',
+    jiedu:'纯阴柔顺，大地之象。宜顺势而为，不可强行争先，以柔克刚，积累实力。',
+    story:'坤卦六爻皆阴，象征大地包容万物。古人感悟大地承载山川、滋养万物而不居功，创出坤卦。传说神农氏教民耕作，顺应坤卦之理，春播秋收，遵循大地规律，方有丰年。坤卦提醒世人：柔顺非软弱，乃是一种深沉的力量，能在最艰难处积蓄能量，于无声处厚积薄发。',
+    yao_key:'履霜坚冰至→直方大→含章可贞→括囊无咎→黄裳元吉→龙战于野' },
+  { n:'水雷屯', short:'屯', serial:'03', verdict:'小吉', keyword:'初生之难，宜守正待时。',
+    lines:[1,0,0,0,1,0],
+    guaci:'屯，元亨利贞，勿用有攸往，利建侯。象曰：云雷，屯；君子以经纶。',
+    jiedu:'草木初萌，破土艰难。万事开头难，此时宜守正待时，广结援助，不可冒进。',
+    story:'屯字象形，如草木初生破土之状。卦取云雷，雷震于云中，蓄势而未发。古时部族创业之初，险阻重重，首领效法屯卦，广纳贤才、稳扎稳打，终建基业。此卦常现于创业起步、新事启动之时，提示当事人：艰难是必经之路，慎行而非退缩，终得亨通。',
+    yao_key:'磐桓→屯如邅如→即鹿无虞→乘马班如→屯其膏→乘马班如泣血' },
+  { n:'山水蒙', short:'蒙', serial:'04', verdict:'平', keyword:'事有迷雾，宜求证再动。',
+    lines:[0,1,0,0,0,1],
+    guaci:'蒙，亨。匪我求童蒙，童蒙求我。象曰：山下出泉，蒙；君子以果行育德。',
+    jiedu:'山下泉水，蒙昧初开。此卦主教化与启蒙，宜虚心求教，明辨是非，不可固执己见。',
+    story:'蒙卦讲述一段师生问答。孔子弟子颜回问仁，夫子以蒙卦作答：真正的求知者，是学生主动求师，而非老师追着学生跑。山下出泉，泉水不择路，遇石则绕，遇土则渗，终汇成江河。此卦警示：不明之时勿妄动，先静心求教，去除蒙昧，方可在正确方向上前进。',
+    yao_key:'发蒙→包蒙→勿用取女→困蒙→童蒙吉→击蒙' },
+  { n:'水天需', short:'需', serial:'05', verdict:'吉', keyword:'等待时机，守正可成。',
+    lines:[1,0,0,1,1,1],
+    guaci:'需，有孚，光亨，贞吉，利涉大川。象曰：云上于天，需；君子以饮食宴乐。',
+    jiedu:'云气聚天，雨将至而未至。此卦主等待，时机未熟，宜养精蓄锐，切勿强行出击。',
+    story:'古时名将韩信，早年落魄，曾忍胯下之辱，世人以为耻，韩信却以需卦自勉。云在天上聚而未降，正是积蓄能量之时。他知时机未到，隐忍待命，终遇刘邦拜将台，一展平生之志，破齐灭楚，封王拜侯。需卦告诉我们：等待不是消极，而是以退为进，蓄势待发的智慧。',
+    yao_key:'需于郊→需于沙→需于泥→需于血→需于酒食→入于穴' },
+  { n:'天水讼', short:'讼', serial:'06', verdict:'小凶', keyword:'易有争执，宜退一步。',
+    lines:[1,1,1,0,0,1],
+    guaci:'讼，有孚，窒惕，中吉，终凶。利见大人，不利涉大川。象曰：天与水违行，讼；君子以作事谋始。',
+    jiedu:'天水相违，争讼之象。此卦主纷争，宜和解退让，若坚持到底终必有失，宜寻中间人调解。',
+    story:'古代有个富商因为一块地界与邻居争执，卜得讼卦，友人劝说，讼卦告诫：争到底者，终有损耗。富商不听，历经三年诉讼，虽然胜诉，却耗尽心力、伤了情谊，所得远不及所失。讼卦非言不可争，而是提醒：争讼之前先问动机，若能和解，莫逞一时之气。凡事谋始，从源头消弭纷争，方为上策。',
+    yao_key:'不永所事→不克讼→食旧德→不克讼→讼元吉→或锡之鞶带' },
+  { n:'地水师', short:'师', serial:'07', verdict:'中吉', keyword:'组织协力，先定规则。',
+    lines:[0,0,0,0,1,0],
+    guaci:'师，贞，丈人，吉无咎。象曰：地中有水，师；君子以容民畜众。',
+    jiedu:'地中蓄水，众兵之象。此卦主团队与统领，宜建立秩序、明确规则，以德服众，不可以力压人。',
+    story:'春秋时，晋文公重耳流亡十九年，历经艰难，终回国称霸。他麾下将士，皆是患难之交。得师卦之道，他论功行赏、赏罚分明，整顿军纪，以德聚将，终成一代霸主。师卦之义，非兵法杀伐，而是教我们如何凝聚人心、建立信任、运营团队的大智慧。地中有水，水无形而能容万物，领导者亦当如此。',
+    yao_key:'师出以律→在师中→师或舆尸→师左次→田有禽→大君有命' },
+  { n:'水地比', short:'比', serial:'08', verdict:'吉', keyword:'亲比之象，结交善友。',
+    lines:[0,1,0,0,0,0],
+    guaci:'比，吉。原筮，元永贞，无咎。象曰：地上有水，比；先王以建万国，亲诸侯。',
+    jiedu:'地上有水，相亲相近。此卦主联合与亲附，宜广结善缘，寻找志同道合之人，团结则强。',
+    story:'战国时，苏秦游说六国合纵，以比卦之理说服各国君主：水依附大地，大地蓄养水分，相辅相成。六国若能如水与地般亲附，共同对抗秦国，则各自安全。诸侯被其说服，佩六国相印，一时风光无两。比卦告诉我们：人生需要盟友，善于结交真诚之人，彼此扶持，方能走得更远。',
+    yao_key:'有孚比之→比之自内→比之匪人→外比之→显比→比之无首' },
+];
+
+// ── NAV ──
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'guadian') buildGuaList();
+}
+
+// ── HOME DATE ──
+(function() {
+  const now = new Date();
+  document.getElementById('hd-date').textContent =
+    (now.getMonth()+1) + '月' + now.getDate() + '日（Demo）';
+  const tgY = TG[(now.getFullYear()-4)%10];
+  const dzY = DZ[(now.getFullYear()-4)%12];
+  document.getElementById('hd-lunar').textContent = tgY + dzY + '年 · 今日黄历';
+})();
+
+const CURRENT_GUA_KEY = 'xuance.currentGua';
+
+function setDebug(msg) {
+  const el = document.getElementById('debug-bar');
+  if (el) el.textContent = '调试：' + msg;
+}
+
+function getSavedGua() {
+  try {
+    return JSON.parse(localStorage.getItem(CURRENT_GUA_KEY) || 'null');
+  } catch(e) {
+    return null;
+  }
+}
+
+function saveCurrentGua(g) {
+  localStorage.setItem(CURRENT_GUA_KEY, JSON.stringify(g));
+  renderTodayGua(g);
+  setDebug(`已保存 ${g.name}（第${g.serial}卦）`);
+}
+
+function normalizeLocalGua(g, method) {
+  return {
+    name: g.name || g.n,
+    short: g.short,
+    serial: g.serial,
+    verdict: g.verdict,
+    keyword: g.keyword,
+    lines: g.lines,
+    guaci: g.guaci,
+    jiedu: g.jiedu,
+    story: g.story,
+    yao_key: g.yao_key,
+    method: method || 'random'
+  };
+}
+
+function castLocalGua(method) {
+  const saved = getSavedGua();
+  const candidates = saved ? GUA.filter(x => x.serial !== saved.serial) : GUA;
+  const pool = candidates.length ? candidates : GUA;
+  const g = pool[Math.floor(Math.random() * pool.length)];
+  return normalizeLocalGua(g, method);
+}
+
+async function fetchGuaWithTimeout(method, timeoutMs=900) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch('http://127.0.0.1:8000/gua', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({method}),
+      signal: controller.signal
+    });
+    if (!res.ok) throw new Error('gua api failed');
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function renderTodayGua(g) {
+  const cardLines = document.querySelector('.today-gua-card .gua-wrap');
+  const nameEl = document.querySelector('.tgc-name');
+  const subEl  = document.querySelector('.tgc-sub');
+  const tagEl = document.querySelector('.today-gua-card .tag');
+  const yiciEl = document.querySelector('.tgc-yici');
+  const yiEl = document.querySelector('.yiji-card.yi .yiji-body');
+  const jiEl = document.querySelector('.yiji-card.ji .yiji-body');
+  const dirEls = document.querySelectorAll('.lucky-dir-name');
+  const minsuoShort = document.getElementById('minsuo-short');
+  const minsuoFull = document.getElementById('minsuo-full');
+  if (!g) {
+    if (cardLines) cardLines.innerHTML = '';
+    if (nameEl) nameEl.textContent = '未起卦';
+    if (subEl) subEl.textContent = '今日尚无卦象';
+    if (tagEl) tagEl.textContent = '待起';
+    if (yiciEl) yiciEl.textContent = '起卦后将在此保持今日卦象。';
+    if (yiEl) yiEl.textContent = '起卦后生成';
+    if (jiEl) jiEl.textContent = '起卦后生成';
+    dirEls.forEach(el => el.textContent = '待定');
+    if (minsuoShort) minsuoShort.textContent = '今日尚未起卦，民俗说明将在起卦后生成。';
+    if (minsuoFull) minsuoFull.textContent = '今日尚未起卦。请先前往起卦页完成一次起卦，系统会把本次卦象保存为今日卦象；之后关闭应用再打开，也会继续显示同一卦象。';
+    setDebug('当前无已保存卦象');
+    return;
+  }
+  if (cardLines && g.lines) cardLines.outerHTML = guaLinesHTML(g.lines, 'dark');
+  if (nameEl) nameEl.textContent = g.name;
+  if (subEl) subEl.textContent = `第${g.serial}卦`;
+  if (tagEl) tagEl.textContent = g.verdict;
+  if (yiciEl) yiciEl.textContent = g.keyword;
+  if (yiEl) yiEl.textContent = '静心、整理、记录';
+  if (jiEl) jiEl.textContent = '急躁、争执、反复起卦';
+  dirEls.forEach((el, idx) => el.textContent = ['正东', '东南', '西北'][idx] || '正北');
+  if (minsuoShort) minsuoShort.textContent = `${g.name}之象：${g.keyword}`;
+  if (minsuoFull) minsuoFull.textContent = `${g.name}之象：${g.keyword}${g.jiedu || ''}${g.story || ''}`;
+  setDebug(`今日页显示 ${g.name}（第${g.serial}卦）`);
+}
+
+function renderGuaResult(g) {
+  const linesEl = document.querySelector('.gr-hero > .gua-wrap');
+  const nameEl = document.querySelector('.gr-hero-name');
+  const serialEl = document.querySelector('.gr-hero-serial');
+  const verdictEl = document.querySelector('.gr-verdict');
+  const sectionTexts = document.querySelectorAll('.gr-section .gr-sec-text');
+  const guaciEl = sectionTexts[0];
+  const jieduEl = sectionTexts[1];
+  if (linesEl && g.lines) linesEl.outerHTML = guaLinesHTML(g.lines, 'ink lg');
+  if (nameEl) nameEl.textContent = g.name;
+  if (serialEl) serialEl.textContent = `第${g.serial}卦`;
+  if (verdictEl) verdictEl.textContent = g.verdict;
+  if (guaciEl) guaciEl.textContent = g.guaci;
+  if (jieduEl) jieduEl.textContent = g.jiedu;
+}
+
+function openTodayGua() {
+  const g = getSavedGua();
+  if (!g) {
+    goScreen('qigua');
+    showToast('请先起卦');
+    return;
+  }
+  renderGuaResult(g);
+  goScreen('gua-result');
+}
+
+async function quickSelfCast() {
+  const method = 'random';
+  let g;
+  try {
+    g = await fetchGuaWithTimeout(method);
+    const saved = getSavedGua();
+    if (saved && g.serial === saved.serial) g = castLocalGua(method);
+    setDebug(`自检起卦：后端成功 ${g.name}`);
+  } catch(e) {
+    g = castLocalGua(method);
+    setDebug(`自检起卦：本地成功 ${g.name}`);
+  }
+  saveCurrentGua(g);
+  renderGuaResult(g);
+  showToast(`已起 ${g.name}`);
+}
+
+function clearTodayGua() {
+  localStorage.removeItem(CURRENT_GUA_KEY);
+  renderTodayGua(null);
+  setDebug('已清除今日卦');
+  showToast('已清除今日卦');
+}
+
+(function loadSavedGua() {
+  const g = getSavedGua();
+  renderTodayGua(g);
+  if (g) renderGuaResult(g);
+})();
+
+// ── MINSUO TOGGLE ──
+function toggleMinsuo(ev) {
+  if (ev) ev.stopPropagation();
+  const s = document.getElementById('minsuo-short');
+  const f = document.getElementById('minsuo-full');
+  const btn = document.getElementById('minsuo-btn');
+  const hidden = getComputedStyle(f).display === 'none';
+  if (hidden) {
+    f.style.display = 'block'; s.style.display = 'none'; btn.textContent = '收起';
+  } else {
+    f.style.display = 'none'; s.style.display = 'block'; btn.textContent = '展开';
+  }
+}
+
+let currentMethod = 'shake';
+
+// ── METHOD SELECT ──
+function selMethod(m) {
+  currentMethod = m;
+  ['shake','coin','num'].forEach(id => {
+    document.getElementById('m-'+id).classList.toggle('sel', id === m);
+  });
+}
+
+// ── CASTING ──
+function startCasting() {
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById('cl'+i);
+    if (el) el.classList.remove('show');
+  }
+  goScreen('casting');
+  const prog = document.getElementById('cast-prog');
+  let step = 0;
+  const labels = ['初爻','二爻','三爻','四爻','五爻','上爻'];
+  function next() {
+    if (step >= 6) {
+      prog.textContent = '卦象已成';
+      setTimeout(async () => {
+        let g;
+        const method = currentMethod === 'shake' ? 'random' : (currentMethod || 'random');
+        try {
+          g = await fetchGuaWithTimeout(method);
+          const saved = getSavedGua();
+          if (saved && g.serial === saved.serial) g = castLocalGua(method);
+          setDebug(`后端起卦成功：${g.name}`);
+        } catch(e) {
+          g = castLocalGua(method);
+          showToast('已用本地卦库起卦');
+          setDebug(`后端不可用，已本地起卦：${g.name}`);
+        }
+        saveCurrentGua(g);
+        renderGuaResult(g);
+        goScreen('gua-result');
+      }, 900);
+      return;
+    }
+    const el = document.getElementById('cl'+(step+1));
+    if (el) el.classList.add('show');
+    prog.textContent = '第 '+(step+1)+' / 6 爻 · '+labels[step];
+    step++;
+    setTimeout(next, 600);
+  }
+  prog.textContent = '正在推演…';
+  setTimeout(next, 700);
+}
+
+// ── WENS RESULT ──
+function showWensResult() {
+  const r = document.getElementById('wens-result');
+  r.style.display = 'block';
+  r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── GUA LINES HTML ──
+function guaLinesHTML(lines, cls='') {
+  const rows = [...lines].reverse().map(l =>
+    l ? `<div class="gua-row"><div class="gy"></div></div>`
+      : `<div class="gua-row"><div class="gn"></div><div class="gn"></div></div>`
+  ).join('');
+  return `<div class="gua-wrap ${cls}">${rows}</div>`;
+}
+
+// ── GUA LIST ──
+function buildGuaList(filter='') {
+  const el = document.getElementById('gd-list');
+  const data = filter
+    ? GUA.filter(g => g.n.includes(filter) || g.short.includes(filter) || g.keyword.includes(filter))
+    : GUA;
+  el.innerHTML = data.map(g => `
+    <div class="gd-item" onclick="showGuaDetail('${g.n}')">
+      ${guaLinesHTML(g.lines, 'sm')}
+      <div class="gd-info">
+        <div class="gd-name-row">
+          <span class="gd-name">${g.n}</span>
+          <span class="gd-verdict">${g.verdict}</span>
+        </div>
+        <div class="gd-desc">${g.keyword}</div>
+      </div>
+      <div class="gd-num">${g.serial}</div>
+    </div>
+  `).join('');
+}
+
+function filterGua() {
+  buildGuaList(document.getElementById('gd-search-input').value.trim());
+}
+
+// ── GUA DETAIL ──
+function showGuaDetail(name) {
+  const g = GUA.find(x => x.n === name);
+  if (!g) return;
+  document.getElementById('detail-hero').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+      ${guaLinesHTML(g.lines, 'ink lg')}
+      <div class="gd-detail-name">${g.n}</div>
+      <div class="gd-detail-serial">第 ${g.serial} 卦</div>
+      <span class="tag tag-${g.verdict==='大吉'?'gold':g.verdict.includes('吉')?'jade':g.verdict.includes('凶')?'red':'gray'}">${g.verdict}</span>
+    </div>
+  `;
+  document.getElementById('detail-body').innerHTML = `
+    <div class="gd-detail-section">
+      <div class="gd-ds-title">▪ 卦 辞</div>
+      <div class="gd-ds-text">${g.guaci}</div>
+    </div>
+    <div class="gd-detail-section">
+      <div class="gd-ds-title">▪ 解 读</div>
+      <div class="gd-ds-text">${g.jiedu}</div>
+    </div>
+    <div class="gd-detail-section">
+      <div class="gd-ds-title">▪ 典故与故事</div>
+      <div class="gd-ds-text">${g.story}</div>
+    </div>
+    <div class="gd-detail-section">
+      <div class="gd-ds-title">▪ 六爻要义</div>
+      <div class="gd-ds-text" style="font-size:12px;line-height:2;">${g.yao_key.split('→').map((y,i)=>`${['初','二','三','四','五','上'][i]}爻：${y}`).join('<br>')}</div>
+    </div>
+  `;
+  goScreen('gua-detail');
+}
+
+// ── BAZI ──
+async function calcBazi() {
+  const dateVal = document.getElementById('bz-date').value || '1995-08-18';
+  const timeVal = document.getElementById('bz-time').value || '09:30';
+  const [y, m, d] = dateVal.split('-').map(Number);
+  const h = parseInt(timeVal.split(':')[0]);
+
+  showToast('正在推算…');
+  let result;
+  try {
+    const res = await fetch('http://127.0.0.1:8000/bazi', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({year: y, month: m, day: d, hour: h})
+    });
+    result = await res.json();
+  } catch(e) {
+    showToast('无法连接服务器，使用本地计算');
+    calcBaziLocal(dateVal, timeVal);
+    return;
+  }
+
+  renderBazi(result);
+  showToast('命盘推算完成');
+  document.getElementById('bz-result').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderBazi(result) {
+  document.getElementById('bz-tian-row').innerHTML = result.tian.map(c =>
+    `<div class="bz-pd-cell"><span class="bz-char">${c}</span><span class="bz-sub-char">天干</span></div>`
+  ).join('');
+  document.getElementById('bz-di-row').innerHTML = result.di.map(c =>
+    `<div class="bz-pd-cell"><span class="bz-char">${c}</span><span class="bz-sub-char">地支</span></div>`
+  ).join('');
+  const total = Object.values(result.wuxing).reduce((a,b)=>a+b,0) || 1;
+  document.getElementById('bz-wx-bars').innerHTML = Object.entries(result.wuxing).map(([name, cnt]) => {
+    const pct = Math.round(cnt / total * 100);
+    const fill = WX_COLORS[name];
+    return `<div class="bz-wx-row">
+      <div class="bz-wx-name">${name}</div>
+      <div class="bz-wx-track"><div class="bz-wx-fill" style="width:${pct}%;background:${fill};"></div></div>
+      <div class="bz-wx-pct">${cnt} / ${pct}%</div>
+    </div>`;
+  }).join('');
+  document.getElementById('bz-zhu-text').textContent = result.summary;
+  document.getElementById('bz-wx-text').textContent =
+    `${result.strong}偏旺，${result.weak}不足。`;
+  document.getElementById('bz-result').style.display = 'block';
+}
+
+function calcBaziLocal(dateVal, timeVal) {
+  const [y, m, d] = dateVal.split('-').map(Number);
+  const h = parseInt(timeVal.split(':')[0]);
+  const hourIdx = Math.floor(((h + 1) % 24) / 2);
+
+  const yTG = TG[(y - 4) % 10];
+  const yDZ = DZ[(y - 4) % 12];
+  const mBase = (Math.floor((y - 4) % 5) * 2 + m - 1) % 10;
+  const mTG = TG[mBase];
+  const mDZ = DZ[(m + 1) % 12];
+  const dayBase = (y * 365 + Math.floor(y/4) + d + m * 30 + 15) % 60;
+  const dTG = TG[dayBase % 10];
+  const dDZ = DZ[dayBase % 12];
+  const hTG = TG[(dayBase % 5) * 2 + (hourIdx % 2)];
+  const hDZ = SC[hourIdx % 12];
+
+  const tian = [yTG, mTG, dTG, hTG];
+  const di   = [yDZ, mDZ, dDZ, hDZ];
+
+  const all = [...tian, ...di].join('');
+  const wx = {
+    木: (all.match(/[甲乙寅卯]/g)||[]).length,
+    火: (all.match(/[丙丁巳午]/g)||[]).length,
+    土: (all.match(/[戊己辰戌丑未]/g)||[]).length,
+    金: (all.match(/[庚辛申酉]/g)||[]).length,
+    水: (all.match(/[壬癸亥子]/g)||[]).length,
+  };
+  const maxWx = Object.entries(wx).sort((a,b)=>b[1]-a[1]);
+  const strong = maxWx.filter(([,v])=>v===maxWx[0][1]).map(([k])=>k).join('、');
+  const weak = maxWx.filter(([,v])=>v===maxWx[maxWx.length-1][1]).map(([k])=>k).join('、');
+  renderBazi({
+    tian,
+    di,
+    wuxing: wx,
+    strong,
+    weak,
+    summary: `年柱 ${yTG}${yDZ}，月柱 ${mTG}${mDZ}，日柱 ${dTG}${dDZ}，时柱 ${hTG}${hDZ}。日主为 ${dTG}。`
+  });
+  showToast('命盘推算完成');
+  document.getElementById('bz-result').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+buildGuaList();
+
+(async function runSelfTest() {
+  if (!location.search.includes('selftest=1')) return;
+  const method = 'random';
+  let g;
+  try {
+    g = await fetchGuaWithTimeout(method);
+    setDebug(`自检：后端成功 ${g.name}`);
+  } catch(e) {
+    g = castLocalGua(method);
+    setDebug(`自检：后端失败，本地成功 ${g.name}`);
+  }
+  saveCurrentGua(g);
+  renderGuaResult(g);
+})();
+</script>
+</body>
+</html>
